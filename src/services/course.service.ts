@@ -1,0 +1,95 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { axiosInstance } from "../config/axios";
+import type { ApiSuccess, PaginatedData } from "../types/common.type";
+import type { Course, CourseDetail, CourseListFilters } from "../types/course.type";
+import type { CourseFormSchemaType } from "../schemas/course.schema";
+
+const COURSES_KEY = "courses";
+
+export const useGetCourses = (filters: CourseListFilters) =>
+  useQuery({
+    queryKey: [COURSES_KEY, filters],
+    queryFn: async () => {
+      const { data } = await axiosInstance.get<ApiSuccess<PaginatedData<Course>>>("/admin/courses", {
+        params: filters,
+      });
+      return data.data;
+    },
+    placeholderData: (prev) => prev,
+  });
+
+export const useGetCourse = (courseId: string | undefined) =>
+  useQuery({
+    queryKey: [COURSES_KEY, courseId],
+    queryFn: async () => {
+      const { data } = await axiosInstance.get<ApiSuccess<CourseDetail>>(`/admin/courses/${courseId}`);
+      return data.data;
+    },
+    enabled: !!courseId,
+  });
+
+export interface CourseImageFiles {
+  primaryImage?: File | null;
+  mentorImage?: File | null;
+}
+
+const buildCourseFormData = (values: CourseFormSchemaType, files: CourseImageFiles) => {
+  const formData = new FormData();
+  formData.append("name", values.name);
+  if (values.description) formData.append("description", values.description);
+  if (values.language) formData.append("language", values.language);
+  if (values.mentorName) formData.append("mentorName", values.mentorName);
+  formData.append("price", String(values.price));
+  formData.append("actualPrice", String(values.actualPrice));
+  formData.append("features", JSON.stringify(values.features));
+  formData.append("highlights", JSON.stringify(values.highlights));
+  formData.append("isPublished", String(values.isPublished));
+  if (files.primaryImage) formData.append("primaryImage", files.primaryImage);
+  if (files.mentorImage) formData.append("mentorImage", files.mentorImage);
+  return formData;
+};
+
+export const useAddCourse = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ values, files }: { values: CourseFormSchemaType; files: CourseImageFiles }) => {
+      const formData = buildCourseFormData(values, files);
+      const { data } = await axiosInstance.post<ApiSuccess<Course>>("/admin/courses", formData);
+      return data.data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: [COURSES_KEY] }),
+  });
+};
+
+export const useUpdateCourse = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      courseId,
+      values,
+      files,
+    }: {
+      courseId: string;
+      values: CourseFormSchemaType;
+      files: CourseImageFiles;
+    }) => {
+      const formData = buildCourseFormData(values, files);
+      const { data } = await axiosInstance.patch<ApiSuccess<Course>>(`/admin/courses/${courseId}`, formData);
+      return data.data;
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: [COURSES_KEY] });
+      qc.invalidateQueries({ queryKey: [COURSES_KEY, variables.courseId] });
+    },
+  });
+};
+
+export const useDeleteCourse = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (courseId: string) => {
+      await axiosInstance.delete(`/admin/courses/${courseId}`);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: [COURSES_KEY] }),
+  });
+};
