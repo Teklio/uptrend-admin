@@ -23,9 +23,7 @@ const MainLayout = () => {
           >
             <Menu size={20} />
           </button>
-          <span className="font-serif text-[17px]" style={{ color: "#191919" }}>
-            Uptrend
-          </span>
+          <img src="/logo.png" alt="Uptrend" className="h-6 w-auto object-contain" />
         </div>
 
         <main className="flex-1 overflow-auto p-4 md:p-6">

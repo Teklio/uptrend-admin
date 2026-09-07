@@ -10,6 +10,7 @@ import {
 import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
+import { cn } from "../../utils/cn.util";
 
 interface SortableItemProps {
   id: string;
@@ -45,14 +46,20 @@ const SortableItem = ({ id, children }: SortableItemProps) => {
 interface SortableListProps<T extends { id: string }> {
   items: T[];
   onReorder: (newOrder: T[]) => void;
-  renderItem: (item: T, dragHandle: ReactNode) => ReactNode;
+  renderItem: (item: T, dragHandle: ReactNode, index: number) => ReactNode;
+  className?: string;
 }
 
 // Drag-and-drop only — the admin never sees or types a displayOrder number.
 // Dropping an item recomputes a fresh sequential order from its new
 // position; the caller is responsible for turning that into the
 // {id, displayOrder}[] payload the reorder API expects.
-export function SortableList<T extends { id: string }>({ items, onReorder, renderItem }: SortableListProps<T>) {
+export function SortableList<T extends { id: string }>({
+  items,
+  onReorder,
+  renderItem,
+  className,
+}: SortableListProps<T>) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -67,10 +74,10 @@ export function SortableList<T extends { id: string }>({ items, onReorder, rende
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-        <div className="flex flex-col gap-2">
-          {items.map((item) => (
+        <div className={cn("flex flex-col gap-2", className)}>
+          {items.map((item, index) => (
             <SortableItem key={item.id} id={item.id}>
-              {(dragHandle) => renderItem(item, dragHandle)}
+              {(dragHandle) => renderItem(item, dragHandle, index)}
             </SortableItem>
           ))}
         </div>

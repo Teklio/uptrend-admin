@@ -11,7 +11,7 @@ import { DateRangeFilter } from "../../components/shared/DateRangeFilter";
 import { StatusBadge } from "../../components/shared/StatusBadge";
 import { Modal } from "../../components/shared/Modal";
 import { UserViewSheet } from "../../components/users/UserViewSheet";
-import { AddUserModal } from "../../components/users/AddUserModal";
+import { AddUserSheet } from "../../components/users/AddUserSheet";
 import { formatDate } from "../../utils/format.util";
 import { toastMessage } from "../../utils/toast.util";
 import type { AdminUser, UserListFilters } from "../../types/user.type";
@@ -93,8 +93,8 @@ const UsersPage = () => {
         <button
           type="button"
           onClick={() => setAddUserOpen(true)}
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white"
-          style={{ backgroundColor: "#7e14ff" }}
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-[#0f172a]"
+          style={{ backgroundColor: "#f5a300" }}
         >
           <Plus size={16} />
           Add user
@@ -149,7 +149,7 @@ const UsersPage = () => {
                   title="View"
                   onClick={() => setViewingUserId(user.id)}
                   className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-black/5"
-                  style={{ color: "#7e14ff" }}
+                  style={{ color: "#002b7f" }}
                 >
                   <Eye size={15} />
                 </button>
@@ -180,7 +180,7 @@ const UsersPage = () => {
 
       <UserViewSheet open={!!viewingUserId} onClose={() => setViewingUserId(null)} userId={viewingUserId} />
 
-      <AddUserModal open={addUserOpen} onClose={() => setAddUserOpen(false)} />
+      <AddUserSheet open={addUserOpen} onClose={() => setAddUserOpen(false)} />
 
       <Modal
         open={!!statusTarget}

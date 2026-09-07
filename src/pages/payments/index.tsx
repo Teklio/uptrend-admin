@@ -10,7 +10,7 @@ import { DropdownSelect } from "../../components/shared/Dropdown";
 import { DateRangeFilter } from "../../components/shared/DateRangeFilter";
 import { StatusBadge } from "../../components/shared/StatusBadge";
 import { PaymentViewSheet } from "../../components/payments/PaymentViewSheet";
-import { OfflinePaymentModal } from "../../components/payments/OfflinePaymentModal";
+import { OfflinePaymentSheet } from "../../components/payments/OfflinePaymentSheet";
 import { formatCurrency, formatDateTime } from "../../utils/format.util";
 import type { PaymentListFilters, PaymentStatus, PaymentType } from "../../types/payment.type";
 
@@ -98,8 +98,8 @@ const PaymentsPage = () => {
         <button
           type="button"
           onClick={() => setOfflineModalOpen(true)}
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white"
-          style={{ backgroundColor: "#7e14ff" }}
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-[#0f172a]"
+          style={{ backgroundColor: "#f5a300" }}
         >
           <Plus size={16} />
           Record offline payment
@@ -150,7 +150,7 @@ const PaymentsPage = () => {
               </p>
             </td>
             <td className="px-4 py-3">{payment.course.name}</td>
-            <td className="px-4 py-3 font-mono">{formatCurrency(payment.amount)}</td>
+            <td className="px-4 py-3 font-mono">{formatCurrency(payment.totalAmount)}</td>
             <td className="px-4 py-3">
               <StatusBadge
                 label={payment.paymentType === "OFFLINE" ? "Offline" : "Online"}
@@ -170,7 +170,7 @@ const PaymentsPage = () => {
                 title="View"
                 onClick={() => setSelectedPaymentId(payment.id)}
                 className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-black/5"
-                style={{ color: "#7e14ff" }}
+                style={{ color: "#002b7f" }}
               >
                 <Eye size={15} />
               </button>
@@ -195,7 +195,7 @@ const PaymentsPage = () => {
         paymentId={selectedPaymentId}
       />
 
-      <OfflinePaymentModal open={offlineModalOpen} onClose={() => setOfflineModalOpen(false)} />
+      <OfflinePaymentSheet open={offlineModalOpen} onClose={() => setOfflineModalOpen(false)} />
     </div>
   );
 };

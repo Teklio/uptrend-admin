@@ -30,7 +30,6 @@ export const useGetPayment = (paymentId: string | undefined) =>
 export interface CreateOfflinePaymentInput {
   userId: string;
   courseId: string;
-  amount: number;
   paymentMode?: string;
   proof?: File | null;
 }
@@ -42,7 +41,6 @@ export const useCreateOfflinePayment = () => {
       const formData = new FormData();
       formData.append("userId", input.userId);
       formData.append("courseId", input.courseId);
-      formData.append("amount", String(input.amount));
       if (input.paymentMode) formData.append("paymentMode", input.paymentMode);
       if (input.proof) formData.append("proof", input.proof);
 

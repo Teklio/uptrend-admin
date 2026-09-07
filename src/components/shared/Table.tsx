@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { TableShimmer } from "./Shimmer";
 
 export interface TableField {
@@ -15,6 +16,10 @@ interface TableProps<T> {
   formatRow: (item: T, index: number) => ReactNode;
   emptyMessage?: string;
   keyExtractor?: (item: T, index: number) => string | number;
+  // Optional expand/collapse: when both are given, an extra full-width row
+  // renders directly beneath any item isRowExpanded flags true for.
+  isRowExpanded?: (item: T) => boolean;
+  renderExpandedRow?: (item: T) => ReactNode;
 }
 
 export function Table<T>({
@@ -25,6 +30,8 @@ export function Table<T>({
   formatRow,
   emptyMessage = "No records found",
   keyExtractor,
+  isRowExpanded,
+  renderExpandedRow,
 }: TableProps<T>) {
   return (
     <div className="overflow-x-auto rounded-2xl bg-white" style={{ border: "1px solid rgba(0,0,0,0.07)" }}>
@@ -62,14 +69,34 @@ export function Table<T>({
               </td>
             </tr>
           ) : (
-            data.map((item, index) => (
-              <tr
-                key={keyExtractor ? keyExtractor(item, index) : index}
-                style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}
-              >
-                {formatRow(item, index)}
-              </tr>
-            ))
+            data.map((item, index) => {
+              const key = keyExtractor ? keyExtractor(item, index) : index;
+              const expanded = isRowExpanded?.(item) ?? false;
+              return (
+                <Fragment key={key}>
+                  <tr style={{ borderBottom: expanded ? "none" : "1px solid rgba(0,0,0,0.05)" }}>
+                    {formatRow(item, index)}
+                  </tr>
+                  <AnimatePresence initial={false}>
+                    {expanded && renderExpandedRow && (
+                      <tr style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
+                        <td colSpan={fields.length} className="p-0" style={{ backgroundColor: "#f8f9fa" }}>
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.22, ease: "easeInOut" }}
+                            style={{ overflow: "hidden" }}
+                          >
+                            <div className="px-4 pb-4 pt-3">{renderExpandedRow(item)}</div>
+                          </motion.div>
+                        </td>
+                      </tr>
+                    )}
+                  </AnimatePresence>
+                </Fragment>
+              );
+            })
           )}
         </tbody>
       </table>

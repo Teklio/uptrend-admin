@@ -57,7 +57,7 @@ export const SideBar = ({ mobileOpen, onMobileClose }: SideBarProps) => {
           onClick={onNavigate}
           className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-semibold transition-colors hover:bg-black/4"
           style={({ isActive }) => ({
-            backgroundColor: isActive ? "#7e14ff" : "transparent",
+            backgroundColor: isActive ? "#002b7f" : "transparent",
             color: isActive ? "#fff" : "rgba(0,0,0,0.65)",
           })}
         >
@@ -76,7 +76,7 @@ export const SideBar = ({ mobileOpen, onMobileClose }: SideBarProps) => {
         className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 hover:bg-black/4"
       >
         <img
-          src={`https://ui-avatars.com/api/?background=7e14ff&color=fff&name=${encodeURIComponent(admin?.name || admin?.email || "Admin")}`}
+          src={`https://ui-avatars.com/api/?background=002b7f&color=fff&name=${encodeURIComponent(admin?.name || admin?.email || "Admin")}`}
           alt="Admin avatar"
           className="h-8 w-8 rounded-full"
         />
@@ -113,11 +113,7 @@ export const SideBar = ({ mobileOpen, onMobileClose }: SideBarProps) => {
         style={{ borderRight: "1px solid rgba(0,0,0,0.07)" }}
       >
         <div className="flex items-center justify-between px-4 py-5">
-          {!collapsed && (
-            <span className="font-serif text-[19px]" style={{ color: "#191919" }}>
-              Uptrend
-            </span>
-          )}
+          {!collapsed && <img src="/logo.png" alt="Uptrend" className="h-7 w-auto object-contain" />}
           <button
             type="button"
             onClick={() => setCollapsed((c) => !c)}
@@ -151,9 +147,7 @@ export const SideBar = ({ mobileOpen, onMobileClose }: SideBarProps) => {
               className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col bg-white md:hidden"
             >
               <div className="flex items-center px-4 py-5">
-                <span className="font-serif text-[19px]" style={{ color: "#191919" }}>
-                  Uptrend
-                </span>
+                <img src="/logo.png" alt="Uptrend" className="h-7 w-auto object-contain" />
               </div>
               {renderNav(onMobileClose)}
               {profileRow}

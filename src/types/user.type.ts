@@ -1,6 +1,8 @@
 export interface UserPaymentSummary {
   id: string;
   amount: string;
+  extraFee: string;
+  totalAmount: string;
   paymentType: "ONLINE" | "OFFLINE";
   expiresAt: string | null;
   createdAt: string;

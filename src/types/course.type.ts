@@ -8,6 +8,7 @@ export interface Course {
   highlights: string[];
   price: string;
   actualPrice: string;
+  extraFee: string;
   isPublished: boolean;
   primaryImageUrl: string | null;
   mentorImageUrl: string | null;

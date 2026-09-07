@@ -8,8 +8,8 @@ export const courseFormSchema = z.object({
   mentorName: nameSchema.optional().or(z.literal("")),
   price: z.number().nonnegative("Cannot be negative"),
   actualPrice: z.number().nonnegative("Cannot be negative"),
+  extraFee: z.number().nonnegative("Cannot be negative"),
   features: z.array(z.string().trim().min(1)),
   highlights: z.array(z.string().trim().min(1)),
-  isPublished: z.boolean(),
 });
 export type CourseFormSchemaType = z.infer<typeof courseFormSchema>;

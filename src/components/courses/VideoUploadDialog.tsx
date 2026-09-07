@@ -172,8 +172,8 @@ export const VideoUploadDialog = ({ open, onClose, courseId, moduleId }: VideoUp
               <button
                 type="submit"
                 disabled={isCreating}
-                className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-60"
-                style={{ backgroundColor: "#7e14ff" }}
+                className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-[#0f172a] disabled:opacity-60"
+                style={{ backgroundColor: "#f5a300" }}
               >
                 <UploadCloud size={15} />
                 {isCreating ? "Preparing..." : "Upload"}
@@ -188,7 +188,7 @@ export const VideoUploadDialog = ({ open, onClose, courseId, moduleId }: VideoUp
           <div className="h-2 w-full overflow-hidden rounded-full" style={{ backgroundColor: "rgba(0,0,0,0.08)" }}>
             <div
               className="h-full rounded-full transition-all"
-              style={{ width: `${progress}%`, backgroundColor: "#7e14ff" }}
+              style={{ width: `${progress}%`, backgroundColor: "#002b7f" }}
             />
           </div>
           <p className="font-mono text-[13px]" style={{ color: "rgba(0,0,0,0.6)" }}>
@@ -215,8 +215,8 @@ export const VideoUploadDialog = ({ open, onClose, courseId, moduleId }: VideoUp
             <button
               type="button"
               onClick={retryUpload}
-              className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white"
-              style={{ backgroundColor: "#7e14ff" }}
+              className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-[#0f172a]"
+              style={{ backgroundColor: "#f5a300" }}
             >
               Retry
             </button>
@@ -237,8 +237,8 @@ export const VideoUploadDialog = ({ open, onClose, courseId, moduleId }: VideoUp
               reset();
               onClose();
             }}
-            className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white"
-            style={{ backgroundColor: "#7e14ff" }}
+            className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-[#0f172a]"
+            style={{ backgroundColor: "#f5a300" }}
           >
             Done
           </button>

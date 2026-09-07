@@ -45,7 +45,7 @@ export const Input = ({
                   rows={rows}
                   placeholder={placeholder}
                   disabled={disabled}
-                  className="w-full rounded-xl px-3.5 py-2.5 text-[14px] outline-none transition-colors resize-none focus:ring-2 focus:ring-[#7e14ff]/15"
+                  className="w-full rounded-xl px-3.5 py-2.5 text-[14px] outline-none transition-colors resize-none focus:ring-2 focus:ring-[#002b7f]/15"
                   style={{ backgroundColor: "#f0f0f0", border: `1px solid ${borderColor}` }}
                 />
               ) : type === "number" ? (
@@ -58,7 +58,7 @@ export const Input = ({
                   type="number"
                   placeholder={placeholder}
                   disabled={disabled}
-                  className="w-full rounded-xl px-3.5 py-2.5 text-[14px] outline-none transition-colors focus:ring-2 focus:ring-[#7e14ff]/15"
+                  className="w-full rounded-xl px-3.5 py-2.5 text-[14px] outline-none transition-colors focus:ring-2 focus:ring-[#002b7f]/15"
                   style={{ backgroundColor: "#f0f0f0", border: `1px solid ${borderColor}` }}
                 />
               ) : (
@@ -67,7 +67,7 @@ export const Input = ({
                   type={type === "password" && showPassword ? "text" : type}
                   placeholder={placeholder}
                   disabled={disabled}
-                  className="w-full rounded-xl px-3.5 py-2.5 text-[14px] outline-none transition-colors focus:ring-2 focus:ring-[#7e14ff]/15"
+                  className="w-full rounded-xl px-3.5 py-2.5 text-[14px] outline-none transition-colors focus:ring-2 focus:ring-[#002b7f]/15"
                   style={{ backgroundColor: "#f0f0f0", border: `1px solid ${borderColor}` }}
                 />
               )}

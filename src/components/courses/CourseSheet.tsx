@@ -23,9 +23,9 @@ const emptyDefaults: CourseFormSchemaType = {
   mentorName: "",
   price: 0,
   actualPrice: 0,
+  extraFee: 0,
   features: [],
   highlights: [],
-  isPublished: false,
 };
 
 // Outer shell only handles the Sheet chrome/animation. The form itself is
@@ -65,9 +65,9 @@ const CourseSheetForm = ({ course, onClose }: CourseSheetFormProps) => {
           mentorName: course.mentorName ?? "",
           price: Number(course.price),
           actualPrice: Number(course.actualPrice),
+          extraFee: Number(course.extraFee),
           features: course.features,
           highlights: course.highlights,
-          isPublished: course.isPublished,
         }
       : emptyDefaults,
   });
@@ -129,6 +129,14 @@ const CourseSheetForm = ({ course, onClose }: CourseSheetFormProps) => {
             <Input name="actualPrice" type="number" label="Actual price (₹)" />
           </div>
 
+          <div>
+            <Input name="extraFee" type="number" label="Internet handling fee (₹)" placeholder="0" />
+            <p className="mt-1.5 text-[12px]" style={{ color: "rgba(0,0,0,0.4)" }}>
+              Added on top of the price at checkout and shown to students as "Internet handling fee". Leave at 0 for
+              no extra fee.
+            </p>
+          </div>
+
           <Controller
             name="features"
             control={form.control}
@@ -153,22 +161,6 @@ const CourseSheetForm = ({ course, onClose }: CourseSheetFormProps) => {
               />
             )}
           />
-
-          <Controller
-            name="isPublished"
-            control={form.control}
-            render={({ field }) => (
-              <label className="flex items-center gap-2.5 text-[13px] font-medium" style={{ color: "#191919" }}>
-                <input
-                  type="checkbox"
-                  checked={field.value}
-                  onChange={(e) => field.onChange(e.target.checked)}
-                  className="h-4 w-4 rounded accent-[#7e14ff]"
-                />
-                Published (visible on the public storefront)
-              </label>
-            )}
-          />
         </div>
 
         <SheetFooter>
@@ -183,8 +175,8 @@ const CourseSheetForm = ({ course, onClose }: CourseSheetFormProps) => {
           <button
             type="submit"
             disabled={isPending}
-            className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-60"
-            style={{ backgroundColor: "#7e14ff" }}
+            className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-[#0f172a] disabled:opacity-60"
+            style={{ backgroundColor: "#f5a300" }}
           >
             {isPending ? "Saving..." : isEdit ? "Save changes" : "Create course"}
           </button>

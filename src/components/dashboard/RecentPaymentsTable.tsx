@@ -41,7 +41,7 @@ export const RecentPaymentsTable = ({ data, isLoading }: RecentPaymentsTableProp
           </p>
         </td>
         <td className="px-4 py-3">{payment.course.name}</td>
-        <td className="px-4 py-3 font-mono">{formatCurrency(payment.amount)}</td>
+        <td className="px-4 py-3 font-mono">{formatCurrency(payment.totalAmount)}</td>
         <td className="px-4 py-3">
           <StatusBadge label={payment.status} variant={STATUS_VARIANT[payment.status]} />
         </td>

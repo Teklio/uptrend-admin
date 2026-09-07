@@ -26,10 +26,8 @@ const LoginPage = () => {
     <div className="flex min-h-screen items-center justify-center px-4" style={{ backgroundColor: "#f4f4f4" }}>
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.07)" }}>
         <div className="mb-8 text-center">
-          <h1 className="font-serif text-[32px]" style={{ color: "#191919" }}>
-            Uptrend
-          </h1>
-          <p className="mt-1 text-[13px]" style={{ color: "rgba(0,0,0,0.45)" }}>
+          <img src="/logo.png" alt="Uptrend" className="mx-auto h-12 w-auto object-contain" />
+          <p className="mt-3 text-[13px]" style={{ color: "rgba(0,0,0,0.45)" }}>
             Sign in to the admin panel
           </p>
         </div>
@@ -48,7 +46,7 @@ const LoginPage = () => {
                     type="checkbox"
                     checked={field.value}
                     onChange={(e) => field.onChange(e.target.checked)}
-                    className="h-4 w-4 rounded accent-[#7e14ff]"
+                    className="h-4 w-4 rounded accent-[#002b7f]"
                   />
                   Remember me
                 </label>
@@ -58,8 +56,8 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={isPending}
-              className="mt-2 rounded-xl py-3 text-[14px] font-semibold text-white transition-opacity disabled:opacity-60"
-              style={{ backgroundColor: "#7e14ff" }}
+              className="mt-2 rounded-xl py-3 text-[14px] font-semibold text-[#0f172a] transition-opacity disabled:opacity-60"
+              style={{ backgroundColor: "#f5a300" }}
             >
               {isPending ? "Signing in..." : "Sign in"}
             </button>

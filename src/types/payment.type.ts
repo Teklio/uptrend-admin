@@ -6,6 +6,8 @@ interface PaymentBase {
   rzpOrderId: string | null;
   reference: string | null;
   amount: string;
+  extraFee: string;
+  totalAmount: string;
   taxPrice: string;
   transactionId: string | null;
   paymentDetails: unknown;

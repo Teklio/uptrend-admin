@@ -155,8 +155,8 @@ const CourseDetailPage = () => {
         <button
           type="button"
           onClick={() => setModuleFormState({ open: true, module: null })}
-          className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-[13px] font-semibold text-white"
-          style={{ backgroundColor: "#7e14ff" }}
+          className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-[13px] font-semibold text-[#0f172a]"
+          style={{ backgroundColor: "#f5a300" }}
         >
           <Plus size={15} />
           Add module
@@ -174,9 +174,10 @@ const CourseDetailPage = () => {
         <SortableList
           items={course.modules}
           onReorder={handleReorderModules}
-          renderItem={(module, dragHandle) => (
+          renderItem={(module, dragHandle, index) => (
             <ModuleAccordionItem
               module={module}
+              index={index}
               dragHandle={dragHandle}
               onRename={() => setModuleFormState({ open: true, module })}
               onDeleteModule={() => setModuleToDelete(module)}

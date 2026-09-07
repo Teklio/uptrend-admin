@@ -5,6 +5,7 @@ import type { CourseVideo } from "../../types/course.type";
 
 interface VideoRowProps {
   video: CourseVideo;
+  index: number;
   dragHandle: ReactNode;
   onPlay: () => void;
   onSync: () => void;
@@ -13,17 +14,17 @@ interface VideoRowProps {
   onDelete: () => void;
 }
 
-export const VideoRow = ({ video, dragHandle, onPlay, onSync, isSyncing, onEdit, onDelete }: VideoRowProps) => (
-  <div
-    className="flex items-center gap-3 rounded-xl bg-white px-3 py-2.5"
-    style={{ border: "1px solid rgba(0,0,0,0.07)" }}
-  >
+export const VideoRow = ({ video, index, dragHandle, onPlay, onSync, isSyncing, onEdit, onDelete }: VideoRowProps) => (
+  <div className="group flex items-center gap-3 rounded-xl px-2.5 py-2 transition-colors hover:bg-black/3">
     {dragHandle}
+    <span className="w-4 shrink-0 text-center text-[12px] tabular-nums" style={{ color: "rgba(0,0,0,0.32)" }}>
+      {index + 1}
+    </span>
     {video.thumbnailUrl ? (
-      <img src={video.thumbnailUrl} alt="" className="h-10 w-16 flex-shrink-0 rounded-lg object-cover" />
+      <img src={video.thumbnailUrl} alt="" className="h-10 w-16 shrink-0 rounded-lg object-cover" />
     ) : (
       <div
-        className="flex h-10 w-16 flex-shrink-0 items-center justify-center rounded-lg"
+        className="flex h-10 w-16 shrink-0 items-center justify-center rounded-lg"
         style={{ backgroundColor: "rgba(0,0,0,0.06)" }}
       >
         <Film size={14} style={{ color: "rgba(0,0,0,0.3)" }} />
@@ -33,17 +34,22 @@ export const VideoRow = ({ video, dragHandle, onPlay, onSync, isSyncing, onEdit,
       <p className="truncate text-[13px] font-medium" style={{ color: "#191919" }}>
         {video.title}
       </p>
-      <p className="font-mono text-[11px]" style={{ color: "rgba(0,0,0,0.4)" }}>
-        {video.durationSeconds === null ? "Processing…" : formatDuration(video.durationSeconds)}
-      </p>
+      {video.description && (
+        <p className="mt-0.5 truncate text-[12px]" style={{ color: "rgba(0,0,0,0.42)" }}>
+          {video.description}
+        </p>
+      )}
     </div>
-    <div className="flex items-center gap-1">
+    <span className="shrink-0 text-[12px] tabular-nums" style={{ color: "rgba(0,0,0,0.4)" }}>
+      {video.durationSeconds === null ? "Processing…" : formatDuration(video.durationSeconds)}
+    </span>
+    <div className="flex items-center gap-0.5 opacity-80 transition-opacity group-hover:opacity-100">
       <button
         type="button"
         title="Preview"
         onClick={onPlay}
         className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-black/5"
-        style={{ color: "#7e14ff" }}
+        style={{ color: "#002b7f" }}
       >
         <Play size={14} />
       </button>
@@ -64,7 +70,7 @@ export const VideoRow = ({ video, dragHandle, onPlay, onSync, isSyncing, onEdit,
         title="Edit"
         onClick={onEdit}
         className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-black/5"
-        style={{ color: "rgba(0,0,0,0.55)" }}
+        style={{ color: "rgba(0,0,0,0.5)" }}
       >
         <Pencil size={14} />
       </button>

@@ -25,3 +25,15 @@ export const formatDuration = (seconds: number | null | undefined) => {
   const secs = Math.floor(seconds % 60);
   return `${mins}:${String(secs).padStart(2, "0")}`;
 };
+
+// Human-readable total, e.g. for a module's combined video runtime — "1h 12m",
+// "45m", "38s" — distinct from formatDuration's mm:ss (which reads oddly once
+// a sum crosses into hours).
+export const formatTotalDuration = (totalSeconds: number) => {
+  if (totalSeconds <= 0) return "0m";
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.round((totalSeconds % 3600) / 60);
+  if (hours > 0) return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+  if (minutes > 0) return `${minutes}m`;
+  return `${Math.round(totalSeconds)}s`;
+};

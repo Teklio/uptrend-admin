@@ -20,10 +20,10 @@ export const TableFilters = ({ children, onApply, onReset, hasActiveFilters }: T
         className="flex w-full items-center justify-between px-4 py-3"
       >
         <span className="flex items-center gap-2 text-[13px] font-semibold" style={{ color: "#191919" }}>
-          <SlidersHorizontal size={15} color={hasActiveFilters ? "#7e14ff" : "rgba(0,0,0,0.5)"} />
+          <SlidersHorizontal size={15} color={hasActiveFilters ? "#002b7f" : "rgba(0,0,0,0.5)"} />
           Filters
           {hasActiveFilters && (
-            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#7e14ff" }} />
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#002b7f" }} />
           )}
         </span>
         <ChevronDown
@@ -47,8 +47,8 @@ export const TableFilters = ({ children, onApply, onReset, hasActiveFilters }: T
             <button
               type="button"
               onClick={onApply}
-              className="rounded-xl px-4 py-2 text-[13px] font-semibold text-white"
-              style={{ backgroundColor: "#7e14ff" }}
+              className="rounded-xl px-4 py-2 text-[13px] font-semibold text-[#0f172a]"
+              style={{ backgroundColor: "#f5a300" }}
             >
               Apply
             </button>

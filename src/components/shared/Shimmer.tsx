@@ -6,7 +6,7 @@ export const MainLayoutShimmer = () => (
   <div className="flex h-screen w-screen items-center justify-center" style={{ backgroundColor: "#f4f4f4" }}>
     <div
       className="h-10 w-10 animate-spin rounded-full border-2 border-t-transparent"
-      style={{ borderColor: "#7e14ff", borderTopColor: "transparent" }}
+      style={{ borderColor: "#002b7f", borderTopColor: "transparent" }}
     />
   </div>
 );
