@@ -16,6 +16,8 @@ export const useGetCourses = (filters: CourseListFilters) =>
       return data.data;
     },
     placeholderData: (prev) => prev,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
 export const useGetCourse = (courseId: string | undefined) =>
@@ -26,6 +28,7 @@ export const useGetCourse = (courseId: string | undefined) =>
       return data.data;
     },
     enabled: !!courseId,
+    staleTime: 5 * 60 * 1000,
   });
 
 export interface CourseImageFiles {
@@ -43,7 +46,6 @@ const buildCourseFormData = (values: CourseFormSchemaType, files: CourseImageFil
   formData.append("actualPrice", String(values.actualPrice));
   formData.append("extraFee", String(values.extraFee));
   formData.append("features", JSON.stringify(values.features));
-  formData.append("highlights", JSON.stringify(values.highlights));
   if (files.primaryImage) formData.append("primaryImage", files.primaryImage);
   if (files.mentorImage) formData.append("mentorImage", files.mentorImage);
   return formData;

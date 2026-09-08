@@ -5,6 +5,8 @@ import { createUserFormSchema, type CreateUserFormSchemaType } from "../../schem
 import { useCreateUser } from "../../services/user.service";
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "../shared/Sheet";
 import { Input } from "../shared/Input";
+import { DiscardChangesModal } from "../shared/DiscardChangesModal";
+import { useDiscardGuard } from "../../hooks/useDiscardGuard";
 import { toastMessage } from "../../utils/toast.util";
 
 interface AddUserSheetProps {
@@ -33,6 +35,11 @@ export const AddUserSheet = ({ open, onClose }: AddUserSheetProps) => {
     onClose();
   };
 
+  const { confirmOpen, requestClose, confirmDiscard, cancelDiscard } = useDiscardGuard(
+    form.formState.isDirty,
+    handleClose,
+  );
+
   const onSubmit = (values: CreateUserFormSchemaType) => {
     const { name, email, phone, state, password } = values;
     createUser(
@@ -48,49 +55,61 @@ export const AddUserSheet = ({ open, onClose }: AddUserSheetProps) => {
   };
 
   return (
-    <Sheet open={open} onOpenChange={(o: boolean) => !o && handleClose()}>
-      <SheetContent open={open}>
-        <FormProvider {...form}>
-          <form onSubmit={(e) => void form.handleSubmit(onSubmit)(e)} className="flex flex-1 flex-col overflow-hidden">
-            <SheetHeader>
-              <SheetTitle>Add user</SheetTitle>
-            </SheetHeader>
+    <>
+      <Sheet open={open} onOpenChange={(o: boolean) => !o && requestClose()}>
+        <SheetContent open={open}>
+          <FormProvider {...form}>
+            <form
+              onSubmit={(e) => void form.handleSubmit(onSubmit)(e)}
+              className="flex flex-1 flex-col overflow-hidden"
+            >
+              <SheetHeader>
+                <SheetTitle>Add user</SheetTitle>
+              </SheetHeader>
 
-            <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 py-5">
-              <Input name="name" label="Full name" placeholder="Jane Doe" />
-              <Input name="email" type="email" label="Email" placeholder="jane@example.com" />
-              <Input name="phone" label="Phone" placeholder="9876543210" />
-              <Input name="state" label="State" placeholder="Tamil Nadu" />
-              <Input name="password" type="password" label="Password" placeholder="Set a password" />
-              <Input name="confirmPassword" type="password" label="Confirm password" placeholder="Re-enter password" />
+              <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 py-5">
+                <Input name="name" label="Full name" placeholder="Jane Doe" />
+                <Input name="email" type="email" label="Email" placeholder="jane@example.com" />
+                <Input name="phone" label="Phone" placeholder="9876543210" />
+                <Input name="state" label="State" placeholder="Tamil Nadu" />
+                <Input name="password" type="password" label="Password" placeholder="Set a password" />
+                <Input
+                  name="confirmPassword"
+                  type="password"
+                  label="Confirm password"
+                  placeholder="Re-enter password"
+                />
 
-              <p className="text-[12px]" style={{ color: "rgba(0,0,0,0.4)" }}>
-                The account is created active and verified — the student can log in immediately with this password.
-              </p>
-            </div>
+                <p className="text-[12px]" style={{ color: "rgba(0,0,0,0.4)" }}>
+                  The account is created active and verified — the student can log in immediately with this
+                  password.
+                </p>
+              </div>
 
-            <SheetFooter>
-              <button
-                type="button"
-                onClick={handleClose}
-                className="rounded-xl px-4 py-2.5 text-[13px] font-semibold"
-                style={{ backgroundColor: "rgba(0,0,0,0.05)", color: "#191919" }}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isPending}
-                className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-[#0f172a] disabled:opacity-60"
-                style={{ backgroundColor: "#f5a300" }}
-              >
-                <UserPlus size={15} />
-                {isPending ? "Creating..." : "Create user"}
-              </button>
-            </SheetFooter>
-          </form>
-        </FormProvider>
-      </SheetContent>
-    </Sheet>
+              <SheetFooter>
+                <button
+                  type="button"
+                  onClick={requestClose}
+                  className="rounded-xl px-4 py-2.5 text-[13px] font-semibold"
+                  style={{ backgroundColor: "rgba(0,0,0,0.05)", color: "#191919" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPending || !form.formState.isDirty}
+                  className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-[#0f172a] disabled:opacity-60"
+                  style={{ backgroundColor: "#f5a300" }}
+                >
+                  <UserPlus size={15} />
+                  {isPending ? "Creating..." : "Create user"}
+                </button>
+              </SheetFooter>
+            </form>
+          </FormProvider>
+        </SheetContent>
+      </Sheet>
+      <DiscardChangesModal open={confirmOpen} onCancel={cancelDiscard} onConfirm={confirmDiscard} />
+    </>
   );
 };

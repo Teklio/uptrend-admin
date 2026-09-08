@@ -8,7 +8,6 @@ import { SortableList } from "../../components/shared/SortableList";
 import { ModuleAccordionItem } from "../../components/courses/ModuleAccordionItem";
 import { ModuleFormInline } from "../../components/courses/ModuleFormInline";
 import { VideoFormInline } from "../../components/courses/VideoFormInline";
-import { VideoUploadDialog } from "../../components/courses/VideoUploadDialog";
 import { VideoPreviewModal } from "../../components/courses/VideoPreviewModal";
 import { CourseSheet } from "../../components/courses/CourseSheet";
 import { DeleteConfirmModal } from "../../components/shared/DeleteConfirmModal";
@@ -19,7 +18,6 @@ import { formatCurrency } from "../../utils/format.util";
 import type { CourseModule, CourseVideo } from "../../types/course.type";
 
 type ModuleFormState = { open: false } | { open: true; module: CourseModule | null };
-type VideoUploadState = { open: false } | { open: true; moduleId: string };
 type PreviewState = { open: false } | { open: true; title: string; embedUrl: string };
 
 const CourseDetailPage = () => {
@@ -30,7 +28,6 @@ const CourseDetailPage = () => {
   const [courseSheetOpen, setCourseSheetOpen] = useState(false);
   const [moduleFormState, setModuleFormState] = useState<ModuleFormState>({ open: false });
   const [moduleToDelete, setModuleToDelete] = useState<CourseModule | null>(null);
-  const [videoUploadState, setVideoUploadState] = useState<VideoUploadState>({ open: false });
   const [videoToEdit, setVideoToEdit] = useState<CourseVideo | null>(null);
   const [videoToDelete, setVideoToDelete] = useState<CourseVideo | null>(null);
   const [previewState, setPreviewState] = useState<PreviewState>({ open: false });
@@ -178,10 +175,10 @@ const CourseDetailPage = () => {
             <ModuleAccordionItem
               module={module}
               index={index}
+              courseId={courseId ?? ""}
               dragHandle={dragHandle}
               onRename={() => setModuleFormState({ open: true, module })}
               onDeleteModule={() => setModuleToDelete(module)}
-              onAddVideo={() => setVideoUploadState({ open: true, moduleId: module.id })}
               onReorderVideos={(newOrder) => handleReorderVideos(module.id, newOrder)}
               onPlayVideo={handlePlayVideo}
               onSyncVideo={handleSyncVideo}
@@ -201,15 +198,6 @@ const CourseDetailPage = () => {
         courseId={courseId ?? ""}
         module={moduleFormState.open ? moduleFormState.module : null}
       />
-
-      {videoUploadState.open && (
-        <VideoUploadDialog
-          open={videoUploadState.open}
-          onClose={() => setVideoUploadState({ open: false })}
-          courseId={courseId ?? ""}
-          moduleId={videoUploadState.moduleId}
-        />
-      )}
 
       <VideoFormInline
         open={!!videoToEdit}

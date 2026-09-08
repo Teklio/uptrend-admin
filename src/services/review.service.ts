@@ -15,6 +15,8 @@ export const useGetReviews = (filters: ReviewListFilters) =>
       return data.data;
     },
     placeholderData: (prev) => prev,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
 export const useUpdateReviewVisibility = () => {

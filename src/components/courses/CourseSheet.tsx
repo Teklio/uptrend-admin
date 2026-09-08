@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { courseFormSchema, type CourseFormSchemaType } from "../../schemas/course.schema";
 import { useAddCourse, useUpdateCourse } from "../../services/course.service";
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "../shared/Sheet";
 import { Input } from "../shared/Input";
+import { Dropdown } from "../shared/Dropdown";
 import { ImageUpload } from "../shared/ImageUpload";
 import { FeaturesInput } from "./FeaturesInput";
+import { DiscardChangesModal } from "../shared/DiscardChangesModal";
+import { useDiscardGuard } from "../../hooks/useDiscardGuard";
 import { toastMessage } from "../../utils/toast.util";
+import { COURSE_LANGUAGE_OPTIONS } from "../../utils/language.util";
 import type { Course } from "../../types/course.type";
 
 interface CourseSheetProps {
@@ -15,6 +19,12 @@ interface CourseSheetProps {
   onClose: () => void;
   course?: Course | null;
 }
+
+// Existing courses may hold a legacy free-text value (from before language
+// became a fixed set) that doesn't match either option — fall back to
+// unselected rather than letting an invalid value slip past the resolver.
+const normalizeLanguage = (value: string | null): CourseFormSchemaType["language"] =>
+  value === "english" || value === "malayalam" ? value : "";
 
 const emptyDefaults: CourseFormSchemaType = {
   name: "",
@@ -25,27 +35,47 @@ const emptyDefaults: CourseFormSchemaType = {
   actualPrice: 0,
   extraFee: 0,
   features: [],
-  highlights: [],
 };
 
 // Outer shell only handles the Sheet chrome/animation. The form itself is
 // only ever rendered while `open` is true, keyed by the target course — so
 // every open gets a freshly-mounted form initialized straight from props
 // (via lazy useState initializers), with no reset-on-open effect needed.
-export const CourseSheet = ({ open, onClose, course }: CourseSheetProps) => (
-  <Sheet open={open} onOpenChange={(o: boolean) => !o && onClose()}>
-    <SheetContent open={open}>
-      {open && <CourseSheetForm key={course?.id ?? "add"} course={course ?? null} onClose={onClose} />}
-    </SheetContent>
-  </Sheet>
-);
+// `hasChanges` is lifted up from the form so backdrop clicks, Escape, and
+// the header's X button — none of which the form itself sees — can also be
+// guarded by the same "discard changes?" confirmation as the Cancel button.
+export const CourseSheet = ({ open, onClose, course }: CourseSheetProps) => {
+  const [hasChanges, setHasChanges] = useState(false);
+  const { confirmOpen, requestClose, confirmDiscard, cancelDiscard } = useDiscardGuard(hasChanges, onClose);
+
+  return (
+    <>
+      <Sheet open={open} onOpenChange={(o: boolean) => !o && requestClose()}>
+        <SheetContent open={open}>
+          {open && (
+            <CourseSheetForm
+              key={course?.id ?? "add"}
+              course={course ?? null}
+              onClose={onClose}
+              onRequestClose={requestClose}
+              onDirtyChange={setHasChanges}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
+      <DiscardChangesModal open={confirmOpen} onCancel={cancelDiscard} onConfirm={confirmDiscard} />
+    </>
+  );
+};
 
 interface CourseSheetFormProps {
   course: Course | null;
   onClose: () => void;
+  onRequestClose: () => void;
+  onDirtyChange: (hasChanges: boolean) => void;
 }
 
-const CourseSheetForm = ({ course, onClose }: CourseSheetFormProps) => {
+const CourseSheetForm = ({ course, onClose, onRequestClose, onDirtyChange }: CourseSheetFormProps) => {
   const isEdit = !!course;
   const { mutate: addCourse, isPending: isAdding } = useAddCourse();
   const { mutate: updateCourse, isPending: isUpdating } = useUpdateCourse();
@@ -61,18 +91,25 @@ const CourseSheetForm = ({ course, onClose }: CourseSheetFormProps) => {
       ? {
           name: course.name,
           description: course.description ?? "",
-          language: course.language ?? "",
+          language: normalizeLanguage(course.language),
           mentorName: course.mentorName ?? "",
           price: Number(course.price),
           actualPrice: Number(course.actualPrice),
           extraFee: Number(course.extraFee),
           features: course.features,
-          highlights: course.highlights,
         }
       : emptyDefaults,
   });
 
   const isPending = isAdding || isUpdating;
+
+  // Image files live outside react-hook-form (they're plain File state, not
+  // registered fields), so isDirty alone wouldn't notice a new image pick.
+  const hasChanges = form.formState.isDirty || !!primaryImage || !!mentorImage;
+
+  useEffect(() => {
+    onDirtyChange(hasChanges);
+  }, [hasChanges, onDirtyChange]);
 
   const onSubmit = (values: CourseFormSchemaType) => {
     const files = { primaryImage, mentorImage };
@@ -120,7 +157,7 @@ const CourseSheetForm = ({ course, onClose }: CourseSheetFormProps) => {
           <Input name="description" type="textarea" label="Description" rows={4} />
 
           <div className="grid grid-cols-2 gap-4">
-            <Input name="language" label="Language" placeholder="English" />
+            <Dropdown name="language" label="Language" options={COURSE_LANGUAGE_OPTIONS} placeholder="Select language" />
             <Input name="mentorName" label="Mentor name" placeholder="Jane Doe" />
           </div>
 
@@ -149,24 +186,12 @@ const CourseSheetForm = ({ course, onClose }: CourseSheetFormProps) => {
               />
             )}
           />
-          <Controller
-            name="highlights"
-            control={form.control}
-            render={({ field }) => (
-              <FeaturesInput
-                label="Highlights"
-                value={field.value}
-                onChange={field.onChange}
-                placeholder="Add a highlight and press Enter"
-              />
-            )}
-          />
         </div>
 
         <SheetFooter>
           <button
             type="button"
-            onClick={onClose}
+            onClick={onRequestClose}
             className="rounded-xl px-4 py-2.5 text-[13px] font-semibold"
             style={{ backgroundColor: "rgba(0,0,0,0.05)", color: "#191919" }}
           >
@@ -174,7 +199,7 @@ const CourseSheetForm = ({ course, onClose }: CourseSheetFormProps) => {
           </button>
           <button
             type="submit"
-            disabled={isPending}
+            disabled={isPending || !hasChanges}
             className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-[#0f172a] disabled:opacity-60"
             style={{ backgroundColor: "#f5a300" }}
           >

@@ -5,7 +5,6 @@ export interface Course {
   language: string | null;
   mentorName: string | null;
   features: string[];
-  highlights: string[];
   price: string;
   actualPrice: string;
   extraFee: string;

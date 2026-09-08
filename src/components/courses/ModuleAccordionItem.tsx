@@ -1,18 +1,19 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, Pencil, Trash2 } from "lucide-react";
 import { SortableList } from "../shared/SortableList";
 import { VideoRow } from "./VideoRow";
+import { InlineVideoUpload } from "./InlineVideoUpload";
 import { formatTotalDuration } from "../../utils/format.util";
 import type { CourseModule, CourseVideo } from "../../types/course.type";
 
 interface ModuleAccordionItemProps {
   module: CourseModule;
   index: number;
+  courseId: string;
   dragHandle: ReactNode;
   onRename: () => void;
   onDeleteModule: () => void;
-  onAddVideo: () => void;
   onReorderVideos: (newOrder: CourseVideo[]) => void;
   onPlayVideo: (video: CourseVideo) => void;
   onSyncVideo: (video: CourseVideo) => void;
@@ -24,10 +25,10 @@ interface ModuleAccordionItemProps {
 export const ModuleAccordionItem = ({
   module,
   index,
+  courseId,
   dragHandle,
   onRename,
   onDeleteModule,
-  onAddVideo,
   onReorderVideos,
   onPlayVideo,
   onSyncVideo,
@@ -119,15 +120,7 @@ export const ModuleAccordionItem = ({
               />
             )}
           </div>
-          <button
-            type="button"
-            onClick={onAddVideo}
-            className="mt-1.5 flex items-center justify-center gap-2 rounded-xl py-2.5 text-[13px] font-semibold"
-            style={{ backgroundColor: "rgba(0,43,127,0.08)", color: "#002b7f" }}
-          >
-            <Plus size={15} />
-            Add video
-          </button>
+          <InlineVideoUpload courseId={courseId} moduleId={module.id} />
         </div>
       )}
     </div>

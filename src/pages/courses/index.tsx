@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash2, FolderOpen, ChevronDown } from "lucide-react";
+import { Plus, Pencil, Trash2, FolderOpen, ChevronDown, CheckCircle2 } from "lucide-react";
 import { useDeleteCourse, useGetCourses, useToggleCoursePublish } from "../../services/course.service";
 import { useSearchDebounce } from "../../hooks/useSearchDebounce";
 import { Table, type TableField } from "../../components/shared/Table";
@@ -12,10 +12,12 @@ import { DateRangeFilter } from "../../components/shared/DateRangeFilter";
 import { Toggle } from "../../components/shared/Toggle";
 import { Modal } from "../../components/shared/Modal";
 import { ExpandableText } from "../../components/shared/ExpandableText";
+import { ExpandableList } from "../../components/shared/ExpandableList";
 import { DeleteConfirmModal } from "../../components/shared/DeleteConfirmModal";
 import { CourseSheet } from "../../components/courses/CourseSheet";
 import { formatCurrency, formatDate } from "../../utils/format.util";
 import { toastMessage } from "../../utils/toast.util";
+import { COURSE_LANGUAGE_OPTIONS } from "../../utils/language.util";
 import type { Course, CourseListFilters } from "../../types/course.type";
 
 type SheetState = { open: false } | { open: true; mode: "add" } | { open: true; mode: "edit"; course: Course };
@@ -163,12 +165,11 @@ const CoursesPage = () => {
       </div>
 
       <TableFilters onApply={applyFilters} onReset={resetFilters} hasActiveFilters={hasActiveFilters}>
-        <input
-          value={draftLanguage ?? ""}
-          onChange={(e) => setDraftLanguage(e.target.value || undefined)}
-          placeholder="Language"
-          className="rounded-xl px-3.5 py-2.5 text-[14px] outline-none"
-          style={{ backgroundColor: "#f0f0f0", border: "1px solid rgba(0,0,0,0.07)" }}
+        <DropdownSelect
+          options={COURSE_LANGUAGE_OPTIONS}
+          value={draftLanguage}
+          onChange={setDraftLanguage}
+          placeholder="Any language"
         />
         <DropdownSelect
           options={PUBLISHED_OPTIONS}
@@ -290,45 +291,17 @@ const CoursesPage = () => {
                 <p className="mb-1.5 text-[11px] font-medium" style={{ color: "rgba(0,0,0,0.4)" }}>
                   Features
                 </p>
-                {course.features.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {course.features.map((f, i) => (
-                      <span
-                        key={i}
-                        className="wrap-break-word min-w-0 max-w-full rounded-full px-2.5 py-1 text-[11.5px]"
-                        style={{ backgroundColor: "rgba(0,43,127,0.08)", color: "#002b7f" }}
-                      >
+                <ExpandableList
+                  items={course.features}
+                  renderItem={(f, i) => (
+                    <li key={i} className="flex min-w-0 items-start gap-2">
+                      <CheckCircle2 size={14} className="mt-0.5 shrink-0" style={{ color: "#002b7f" }} />
+                      <span className="wrap-break-word min-w-0 text-[13px]" style={{ color: "#191919" }}>
                         {f}
                       </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-[13px]" style={{ color: "rgba(0,0,0,0.4)" }}>
-                    —
-                  </p>
-                )}
-              </div>
-              <div className="min-w-0">
-                <p className="mb-1.5 text-[11px] font-medium" style={{ color: "rgba(0,0,0,0.4)" }}>
-                  Highlights
-                </p>
-                {course.highlights.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {course.highlights.map((h, i) => (
-                      <span
-                        key={i}
-                        className="wrap-break-word min-w-0 max-w-full rounded-full px-2.5 py-1 text-[11.5px]"
-                        style={{ backgroundColor: "rgba(245,163,0,0.12)", color: "#d68e00" }}
-                      >
-                        {h}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-[13px]" style={{ color: "rgba(0,0,0,0.4)" }}>
-                    —
-                  </p>
-                )}
+                    </li>
+                  )}
+                />
               </div>
             </div>
           </div>
@@ -364,7 +337,9 @@ const CoursesPage = () => {
                 </div>
               </div>
             </td>
-            <td className="px-4 py-3">{course.language || "—"}</td>
+            <td className="px-4 py-3">
+              {COURSE_LANGUAGE_OPTIONS.find((o) => o.value === course.language)?.label ?? course.language ?? "—"}
+            </td>
             <td className="px-4 py-3">
               <div className="flex items-center gap-2 font-mono">
                 <span style={{ color: "#191919" }}>{formatCurrency(course.price)}</span>

@@ -15,6 +15,8 @@ export const useGetPayments = (filters: PaymentListFilters) =>
       return data.data;
     },
     placeholderData: (prev) => prev,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
 export const useGetPayment = (paymentId: string | undefined) =>
@@ -25,6 +27,7 @@ export const useGetPayment = (paymentId: string | undefined) =>
       return data.data;
     },
     enabled: !!paymentId,
+    staleTime: 5 * 60 * 1000,
   });
 
 export interface CreateOfflinePaymentInput {
