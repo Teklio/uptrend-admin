@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash2, FolderOpen } from "lucide-react";
-import { useDeleteCourse, useGetCourses } from "../../services/course.service";
+import { Plus, Pencil, Trash2, FolderOpen, ChevronDown, CheckCircle2 } from "lucide-react";
+import { useDeleteCourse, useGetCourses, useToggleCoursePublish } from "../../services/course.service";
 import { useSearchDebounce } from "../../hooks/useSearchDebounce";
 import { Table, type TableField } from "../../components/shared/Table";
 import { TablePagination } from "../../components/shared/TablePagination";
@@ -9,11 +9,15 @@ import { TableFilters } from "../../components/shared/TableFilters";
 import { SearchInput } from "../../components/shared/SearchInput";
 import { DropdownSelect } from "../../components/shared/Dropdown";
 import { DateRangeFilter } from "../../components/shared/DateRangeFilter";
-import { StatusBadge } from "../../components/shared/StatusBadge";
+import { Toggle } from "../../components/shared/Toggle";
+import { Modal } from "../../components/shared/Modal";
+import { ExpandableText } from "../../components/shared/ExpandableText";
+import { ExpandableList } from "../../components/shared/ExpandableList";
 import { DeleteConfirmModal } from "../../components/shared/DeleteConfirmModal";
 import { CourseSheet } from "../../components/courses/CourseSheet";
 import { formatCurrency, formatDate } from "../../utils/format.util";
 import { toastMessage } from "../../utils/toast.util";
+import { COURSE_LANGUAGE_OPTIONS } from "../../utils/language.util";
 import type { Course, CourseListFilters } from "../../types/course.type";
 
 type SheetState = { open: false } | { open: true; mode: "add" } | { open: true; mode: "edit"; course: Course };
@@ -36,7 +40,7 @@ const FIELDS: TableField[] = [
   { key: "status", label: "Status" },
   { key: "modules", label: "Modules" },
   { key: "date", label: "Created" },
-  { key: "actions", label: "" },
+  { key: "actions", label: "Actions", className: "text-right" },
 ];
 
 const CoursesPage = () => {
@@ -58,6 +62,17 @@ const CoursesPage = () => {
 
   const [sheetState, setSheetState] = useState<SheetState>({ open: false });
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+  const [publishTarget, setPublishTarget] = useState<Course | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (courseId: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(courseId)) next.delete(courseId);
+      else next.add(courseId);
+      return next;
+    });
+  };
 
   const filters: CourseListFilters = {
     ...appliedFilters,
@@ -68,6 +83,7 @@ const CoursesPage = () => {
 
   const { data, isLoading, error } = useGetCourses(filters);
   const { mutate: deleteCourse, isPending: isDeleting } = useDeleteCourse();
+  const { mutate: togglePublish, isPending: isTogglingPublish } = useToggleCoursePublish();
 
   const applyFilters = () => {
     setAppliedFilters({
@@ -112,6 +128,21 @@ const CoursesPage = () => {
     });
   };
 
+  const handleTogglePublish = () => {
+    if (!publishTarget) return;
+    const nextPublished = !publishTarget.isPublished;
+    togglePublish(
+      { courseId: publishTarget.id, isPublished: nextPublished },
+      {
+        onSuccess: () => {
+          toastMessage.success({ message: nextPublished ? "Course published" : "Course unpublished" });
+          setPublishTarget(null);
+        },
+        onError: (err) => toastMessage.apiError(err),
+      },
+    );
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -121,8 +152,8 @@ const CoursesPage = () => {
         <button
           type="button"
           onClick={() => setSheetState({ open: true, mode: "add" })}
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white"
-          style={{ backgroundColor: "#7e14ff" }}
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-[#0f172a]"
+          style={{ backgroundColor: "#f5a300" }}
         >
           <Plus size={16} />
           Add course
@@ -134,12 +165,11 @@ const CoursesPage = () => {
       </div>
 
       <TableFilters onApply={applyFilters} onReset={resetFilters} hasActiveFilters={hasActiveFilters}>
-        <input
-          value={draftLanguage ?? ""}
-          onChange={(e) => setDraftLanguage(e.target.value || undefined)}
-          placeholder="Language"
-          className="rounded-xl px-3.5 py-2.5 text-[14px] outline-none"
-          style={{ backgroundColor: "#f0f0f0", border: "1px solid rgba(0,0,0,0.07)" }}
+        <DropdownSelect
+          options={COURSE_LANGUAGE_OPTIONS}
+          value={draftLanguage}
+          onChange={setDraftLanguage}
+          placeholder="Any language"
         />
         <DropdownSelect
           options={PUBLISHED_OPTIONS}
@@ -184,10 +214,114 @@ const CoursesPage = () => {
         error={error}
         keyExtractor={(c) => c.id}
         emptyMessage="No courses yet"
+        isRowExpanded={(course) => expandedIds.has(course.id)}
+        renderExpandedRow={(course) => (
+          <div className="flex flex-col gap-4 pt-1 sm:flex-row">
+            <div className="flex shrink-0 gap-3">
+              <div>
+                <p className="mb-1.5 text-[11px] font-medium" style={{ color: "rgba(0,0,0,0.4)" }}>
+                  Primary image
+                </p>
+                {course.primaryImageUrl ? (
+                  <img src={course.primaryImageUrl} alt="" className="h-24 w-24 rounded-xl object-cover" />
+                ) : (
+                  <div
+                    className="flex h-24 w-24 items-center justify-center rounded-xl text-center text-[11px]"
+                    style={{ backgroundColor: "rgba(0,0,0,0.06)", color: "rgba(0,0,0,0.35)" }}
+                  >
+                    No image
+                  </div>
+                )}
+              </div>
+              <div>
+                <p className="mb-1.5 text-[11px] font-medium" style={{ color: "rgba(0,0,0,0.4)" }}>
+                  Mentor image
+                </p>
+                {course.mentorImageUrl ? (
+                  <img src={course.mentorImageUrl} alt="" className="h-24 w-24 rounded-xl object-cover" />
+                ) : (
+                  <div
+                    className="flex h-24 w-24 items-center justify-center rounded-xl text-center text-[11px]"
+                    style={{ backgroundColor: "rgba(0,0,0,0.06)", color: "rgba(0,0,0,0.35)" }}
+                  >
+                    No image
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="grid min-w-0 flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="min-w-0">
+                <p className="mb-1 text-[11px] font-medium" style={{ color: "rgba(0,0,0,0.4)" }}>
+                  Description
+                </p>
+                <ExpandableText
+                  text={course.description || "—"}
+                  className="text-[13px]"
+                  style={{ color: "#191919" }}
+                />
+              </div>
+              <div className="min-w-0">
+                <p className="mb-1 text-[11px] font-medium" style={{ color: "rgba(0,0,0,0.4)" }}>
+                  Mentor
+                </p>
+                <p className="wrap-break-word text-[13px]" style={{ color: "#191919" }}>
+                  {course.mentorName || "—"}
+                </p>
+              </div>
+              <div className="min-w-0">
+                <p className="mb-1 text-[11px] font-medium" style={{ color: "rgba(0,0,0,0.4)" }}>
+                  Pricing
+                </p>
+                <p className="text-[13px]" style={{ color: "#191919" }}>
+                  {formatCurrency(course.price)}
+                  {Number(course.actualPrice) > Number(course.price) && (
+                    <span className="ml-1.5 line-through" style={{ color: "rgba(0,0,0,0.35)" }}>
+                      {formatCurrency(course.actualPrice)}
+                    </span>
+                  )}
+                  {" + "}
+                  {formatCurrency(course.extraFee)} internet handling fee
+                </p>
+                <p className="mt-0.5 text-[12px]" style={{ color: "rgba(0,0,0,0.4)" }}>
+                  Student pays {formatCurrency(Number(course.price) + Number(course.extraFee))} total
+                </p>
+              </div>
+              <div className="min-w-0">
+                <p className="mb-1.5 text-[11px] font-medium" style={{ color: "rgba(0,0,0,0.4)" }}>
+                  Features
+                </p>
+                <ExpandableList
+                  items={course.features}
+                  renderItem={(f, i) => (
+                    <li key={i} className="flex min-w-0 items-start gap-2">
+                      <CheckCircle2 size={14} className="mt-0.5 shrink-0" style={{ color: "#002b7f" }} />
+                      <span className="wrap-break-word min-w-0 text-[13px]" style={{ color: "#191919" }}>
+                        {f}
+                      </span>
+                    </li>
+                  )}
+                />
+              </div>
+            </div>
+          </div>
+        )}
         formatRow={(course) => (
           <>
             <td className="px-4 py-3">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => toggleExpanded(course.id)}
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg hover:bg-black/5"
+                  style={{ color: "rgba(0,0,0,0.4)" }}
+                >
+                  <ChevronDown
+                    size={15}
+                    className="transition-transform"
+                    style={{ transform: expandedIds.has(course.id) ? undefined : "rotate(-90deg)" }}
+                  />
+                </button>
                 {course.primaryImageUrl ? (
                   <img src={course.primaryImageUrl} alt="" className="h-10 w-10 rounded-lg object-cover" />
                 ) : (
@@ -203,13 +337,34 @@ const CoursesPage = () => {
                 </div>
               </div>
             </td>
-            <td className="px-4 py-3">{course.language || "—"}</td>
-            <td className="px-4 py-3 font-mono">{formatCurrency(course.price)}</td>
             <td className="px-4 py-3">
-              <StatusBadge
-                label={course.isPublished ? "Published" : "Draft"}
-                variant={course.isPublished ? "success" : "neutral"}
-              />
+              {COURSE_LANGUAGE_OPTIONS.find((o) => o.value === course.language)?.label ?? course.language ?? "—"}
+            </td>
+            <td className="px-4 py-3">
+              <div className="flex items-center gap-2 font-mono">
+                <span style={{ color: "#191919" }}>{formatCurrency(course.price)}</span>
+                {Number(course.actualPrice) > Number(course.price) && (
+                  <span className="text-[12px] line-through" style={{ color: "rgba(0,0,0,0.35)" }}>
+                    {formatCurrency(course.actualPrice)}
+                  </span>
+                )}
+              </div>
+              {Number(course.extraFee) > 0 && (
+                <p className="mt-0.5 text-[11px]" style={{ color: "rgba(0,0,0,0.4)" }}>
+                  + {formatCurrency(course.extraFee)} fee
+                </p>
+              )}
+            </td>
+            <td className="px-4 py-3">
+              <div className="flex items-center gap-2.5">
+                <Toggle checked={course.isPublished} onClick={() => setPublishTarget(course)} />
+                <span
+                  className="text-[12.5px] font-medium"
+                  style={{ color: course.isPublished ? "#16a34a" : "rgba(0,0,0,0.45)" }}
+                >
+                  {course.isPublished ? "Published" : "Draft"}
+                </span>
+              </div>
             </td>
             <td className="px-4 py-3">{course._count?.modules ?? 0}</td>
             <td className="px-4 py-3" style={{ color: "rgba(0,0,0,0.5)" }}>
@@ -222,7 +377,7 @@ const CoursesPage = () => {
                   title="Manage content"
                   onClick={() => navigate(`/courses/${course.id}`)}
                   className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-black/5"
-                  style={{ color: "#7e14ff" }}
+                  style={{ color: "#002b7f" }}
                 >
                   <FolderOpen size={16} />
                 </button>
@@ -274,6 +429,37 @@ const CoursesPage = () => {
         title="Delete this course?"
         description="This cannot be undone. Courses with existing payments can't be deleted — unpublish them instead."
       />
+
+      <Modal
+        open={!!publishTarget}
+        onClose={() => setPublishTarget(null)}
+        title={publishTarget?.isPublished ? "Unpublish this course?" : "Publish this course?"}
+      >
+        <p className="mb-5 text-[13px]" style={{ color: "rgba(0,0,0,0.5)" }}>
+          {publishTarget?.isPublished
+            ? "It will disappear from the storefront and can't be purchased anymore. Students who already own it keep their access."
+            : "It will become visible in the storefront and available for purchase."}
+        </p>
+        <div className="flex justify-end gap-2.5">
+          <button
+            type="button"
+            onClick={() => setPublishTarget(null)}
+            className="rounded-xl px-4 py-2.5 text-[13px] font-semibold"
+            style={{ backgroundColor: "rgba(0,0,0,0.05)", color: "#191919" }}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleTogglePublish}
+            disabled={isTogglingPublish}
+            className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-60"
+            style={{ backgroundColor: publishTarget?.isPublished ? "#dc2626" : "#16a34a" }}
+          >
+            {isTogglingPublish ? "Saving..." : publishTarget?.isPublished ? "Unpublish" : "Publish"}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 };

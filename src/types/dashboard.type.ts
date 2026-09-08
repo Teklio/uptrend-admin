@@ -1,6 +1,8 @@
 export interface DashboardRecentPayment {
   id: string;
   amount: number;
+  extraFee: number;
+  totalAmount: number;
   status: "PENDING" | "SUCCESS" | "FAILED" | "CANCELLED";
   createdAt: string;
   user: { id: string; name: string | null; email: string };

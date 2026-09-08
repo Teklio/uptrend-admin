@@ -36,7 +36,7 @@ export const ImageUpload = ({ label, previewUrl, onChange, className }: ImageUpl
         className="relative flex h-36 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl text-center"
         style={{
           backgroundColor: "#f0f0f0",
-          border: `1.5px dashed ${isDragActive ? "#7e14ff" : "rgba(0,0,0,0.15)"}`,
+          border: `1.5px dashed ${isDragActive ? "#002b7f" : "rgba(0,0,0,0.15)"}`,
         }}
       >
         <input {...getInputProps()} />

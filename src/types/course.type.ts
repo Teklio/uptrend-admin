@@ -5,9 +5,9 @@ export interface Course {
   language: string | null;
   mentorName: string | null;
   features: string[];
-  highlights: string[];
   price: string;
   actualPrice: string;
+  extraFee: string;
   isPublished: boolean;
   primaryImageUrl: string | null;
   mentorImageUrl: string | null;

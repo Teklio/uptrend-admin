@@ -15,6 +15,8 @@ export const useGetUsers = (filters: UserListFilters) =>
       return data.data;
     },
     placeholderData: (prev) => prev,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
 export const useGetUser = (userId: string | undefined) =>
@@ -25,6 +27,7 @@ export const useGetUser = (userId: string | undefined) =>
       return data.data;
     },
     enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
   });
 
 export interface CreateUserInput {

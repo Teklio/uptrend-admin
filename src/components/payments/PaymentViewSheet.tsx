@@ -62,7 +62,13 @@ export const PaymentViewSheet = ({ open, onClose, paymentId }: PaymentViewSheetP
                   variant={payment.paymentType === "OFFLINE" ? "warning" : "neutral"}
                 />
               </DetailRow>
-              <DetailRow label="Amount">{formatCurrency(payment.amount)}</DetailRow>
+              <DetailRow label="Course price">{formatCurrency(payment.amount)}</DetailRow>
+              {Number(payment.extraFee) > 0 && (
+                <DetailRow label="Internet handling fee">{formatCurrency(payment.extraFee)}</DetailRow>
+              )}
+              <DetailRow label="Total paid">
+                <span className="font-semibold">{formatCurrency(payment.totalAmount)}</span>
+              </DetailRow>
               <DetailRow label="User">{payment.user.name || payment.user.email}</DetailRow>
               <DetailRow label="Email">{payment.user.email}</DetailRow>
               <DetailRow label="Course">{payment.course.name}</DetailRow>
@@ -87,7 +93,7 @@ export const PaymentViewSheet = ({ open, onClose, paymentId }: PaymentViewSheetP
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 text-[13px] font-medium underline-offset-2 hover:underline"
-                    style={{ color: "#7e14ff" }}
+                    style={{ color: "#002b7f" }}
                   >
                     View / download <ExternalLink size={13} />
                   </a>
@@ -124,8 +130,8 @@ export const PaymentViewSheet = ({ open, onClose, paymentId }: PaymentViewSheetP
                         type="button"
                         onClick={handleExtend}
                         disabled={isExtending}
-                        className="ml-auto rounded-xl px-3.5 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
-                        style={{ backgroundColor: "#7e14ff" }}
+                        className="ml-auto rounded-xl px-3.5 py-2 text-[13px] font-semibold text-[#0f172a] disabled:opacity-60"
+                        style={{ backgroundColor: "#f5a300" }}
                       >
                         {isExtending ? "Applying..." : "Apply"}
                       </button>
@@ -138,7 +144,7 @@ export const PaymentViewSheet = ({ open, onClose, paymentId }: PaymentViewSheetP
                           onClick={() => setExtendDays(String(preset))}
                           className="rounded-full px-3 py-1 text-[12px]"
                           style={{
-                            backgroundColor: extendDays === String(preset) ? "#7e14ff" : "rgba(0,0,0,0.06)",
+                            backgroundColor: extendDays === String(preset) ? "#002b7f" : "rgba(0,0,0,0.06)",
                             color: extendDays === String(preset) ? "#fff" : "#191919",
                           }}
                         >

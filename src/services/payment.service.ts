@@ -15,6 +15,8 @@ export const useGetPayments = (filters: PaymentListFilters) =>
       return data.data;
     },
     placeholderData: (prev) => prev,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
 export const useGetPayment = (paymentId: string | undefined) =>
@@ -25,12 +27,12 @@ export const useGetPayment = (paymentId: string | undefined) =>
       return data.data;
     },
     enabled: !!paymentId,
+    staleTime: 5 * 60 * 1000,
   });
 
 export interface CreateOfflinePaymentInput {
   userId: string;
   courseId: string;
-  amount: number;
   paymentMode?: string;
   proof?: File | null;
 }
@@ -42,7 +44,6 @@ export const useCreateOfflinePayment = () => {
       const formData = new FormData();
       formData.append("userId", input.userId);
       formData.append("courseId", input.courseId);
-      formData.append("amount", String(input.amount));
       if (input.paymentMode) formData.append("paymentMode", input.paymentMode);
       if (input.proof) formData.append("proof", input.proof);
 

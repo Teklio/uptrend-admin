@@ -47,13 +47,13 @@ export const FileUpload = ({ label, file, onChange, accept = DEFAULT_ACCEPT, cla
         className="flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3.5 text-left"
         style={{
           backgroundColor: "#f0f0f0",
-          border: `1.5px dashed ${isDragActive ? "#7e14ff" : "rgba(0,0,0,0.15)"}`,
+          border: `1.5px dashed ${isDragActive ? "#002b7f" : "rgba(0,0,0,0.15)"}`,
         }}
       >
         <input {...getInputProps()} />
         {file ? (
           <>
-            <FileText size={18} style={{ color: "#7e14ff" }} />
+            <FileText size={18} style={{ color: "#002b7f" }} />
             <span className="flex-1 truncate text-[13px]" style={{ color: "#191919" }}>
               {file.name}
             </span>

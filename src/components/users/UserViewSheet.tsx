@@ -73,7 +73,7 @@ export const UserViewSheet = ({ open, onClose, userId }: UserViewSheetProps) => 
                         </div>
                         <div className="text-right">
                           <p className="font-mono text-[13px]" style={{ color: "#191919" }}>
-                            {formatCurrency(p.amount)}
+                            {formatCurrency(p.totalAmount)}
                           </p>
                           <p className="text-[11px]" style={{ color: "rgba(0,0,0,0.4)" }}>
                             {formatDate(p.createdAt)}

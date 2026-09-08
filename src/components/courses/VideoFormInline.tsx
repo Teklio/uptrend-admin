@@ -61,8 +61,8 @@ export const VideoFormInline = ({ open, onClose, courseId, video }: VideoFormInl
             <button
               type="submit"
               disabled={isPending}
-              className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-60"
-              style={{ backgroundColor: "#7e14ff" }}
+              className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-[#0f172a] disabled:opacity-60"
+              style={{ backgroundColor: "#f5a300" }}
             >
               {isPending ? "Saving..." : "Save changes"}
             </button>

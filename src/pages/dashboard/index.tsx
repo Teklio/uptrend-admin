@@ -29,7 +29,7 @@ const DashboardPage = () => {
               onClick={() => setPeriod(p.value)}
               className="rounded-lg px-3.5 py-1.5 text-[12px] font-semibold transition-colors"
               style={{
-                backgroundColor: period === p.value ? "#7e14ff" : "transparent",
+                backgroundColor: period === p.value ? "#002b7f" : "transparent",
                 color: period === p.value ? "#fff" : "rgba(0,0,0,0.55)",
               }}
             >
@@ -44,23 +44,23 @@ const DashboardPage = () => {
           label="Total users"
           value={isLoading ? "—" : data?.users.total ?? 0}
           hint={isLoading ? undefined : `${data?.users.newInRange ?? 0} new in range`}
-          icon={<Users size={17} color="#7e14ff" />}
+          icon={<Users size={17} color="#002b7f" />}
         />
         <StatsCard
           label="Active users"
           value={isLoading ? "—" : data?.users.active ?? 0}
-          icon={<UserCheck size={17} color="#7e14ff" />}
+          icon={<UserCheck size={17} color="#002b7f" />}
         />
         <StatsCard
           label="Total courses"
           value={isLoading ? "—" : data?.courses.total ?? 0}
-          icon={<BookOpen size={17} color="#7e14ff" />}
+          icon={<BookOpen size={17} color="#002b7f" />}
         />
         <StatsCard
           label="Revenue (in range)"
           value={isLoading ? "—" : formatCurrency(data?.revenue.inRange ?? 0)}
           hint={isLoading ? undefined : `${formatCurrency(data?.revenue.allTime ?? 0)} all-time`}
-          icon={<Wallet size={17} color="#7e14ff" />}
+          icon={<Wallet size={17} color="#002b7f" />}
         />
       </div>
 

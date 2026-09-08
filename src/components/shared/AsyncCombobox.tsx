@@ -9,6 +9,9 @@ export interface ComboboxOptionData {
   label: string;
   sublabel?: string;
   value: string;
+  // Optional passthrough for extra data the picking screen needs (e.g. a
+  // course's price/fee) without a second fetch after selection.
+  meta?: Record<string, unknown>;
 }
 
 interface AsyncComboboxProps {
@@ -89,7 +92,7 @@ export const AsyncCombobox = ({
               <ComboboxOption
                 key={option.value}
                 value={option}
-                className="relative cursor-pointer select-none px-3.5 py-2.5 data-focus:bg-[#7e14ff]/8"
+                className="relative cursor-pointer select-none px-3.5 py-2.5 data-focus:bg-[#002b7f]/8"
               >
                 {({ selected }) => (
                   <div className="flex items-center justify-between gap-2">
@@ -103,7 +106,7 @@ export const AsyncCombobox = ({
                         </p>
                       )}
                     </div>
-                    {selected && <Check size={15} color="#7e14ff" />}
+                    {selected && <Check size={15} color="#002b7f" />}
                   </div>
                 )}
               </ComboboxOption>
