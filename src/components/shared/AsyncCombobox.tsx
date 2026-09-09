@@ -60,6 +60,7 @@ export const AsyncCombobox = ({
         onChange={onChange}
         onClose={() => setQuery("")}
         disabled={disabled}
+        immediate
         by={(a, b) => a?.value === b?.value}
       >
         <div className="relative">
@@ -74,8 +75,7 @@ export const AsyncCombobox = ({
             <ChevronDown size={16} style={{ color: "rgba(0,0,0,0.4)" }} />
           </ComboboxButton>
           <ComboboxOptions
-            anchor="bottom start"
-            className="z-20 mt-1.5 max-h-60 w-[var(--input-width)] overflow-auto rounded-xl bg-white py-1.5 text-[14px] shadow-lg focus:outline-none"
+            className="absolute z-20 mt-1.5 max-h-60 w-full overflow-auto rounded-xl bg-white py-1.5 text-[14px] shadow-lg focus:outline-none"
             style={{ border: "1px solid rgba(0,0,0,0.07)" }}
           >
             {isFetching && (

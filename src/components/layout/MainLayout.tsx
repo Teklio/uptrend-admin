@@ -11,13 +11,17 @@ const MainLayout = () => {
   const location = useLocation();
   const task = useVideoUploadTask();
 
-  // Only the browser itself decides when to block same-page actions (it
-  // doesn't) — this blocker fires solely on in-app route changes, matching
-  // the requirement that only actual navigation away needs a confirmation.
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      videoUploadManager.isUploading() && currentLocation.pathname !== nextLocation.pathname,
-  );
+  // Only fires when actually leaving the course page the upload is
+  // anchored to — once the admin has already left it (confirmed or
+  // otherwise), hopping between any other pages isn't "leaving the upload"
+  // again, so it must not keep re-blocking every subsequent navigation.
+  const blocker = useBlocker(({ currentLocation, nextLocation }) => {
+    if (!videoUploadManager.isUploading()) return false;
+    const activeTask = videoUploadManager.getSnapshot();
+    if (!activeTask) return false;
+    const uploadPagePath = `/courses/${activeTask.courseId}`;
+    return currentLocation.pathname === uploadPagePath && nextLocation.pathname !== uploadPagePath;
+  });
 
   const showGlobalIndicator = !!task && location.pathname !== `/courses/${task.courseId}`;
 

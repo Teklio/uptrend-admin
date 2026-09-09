@@ -11,6 +11,7 @@ import {
 } from "../../schemas/adminauth.schema";
 import { useChangeAdminPassword, useMe, useUpdateAdminProfile } from "../../services/auth.service";
 import { Input } from "../../components/shared/Input";
+import { Modal } from "../../components/shared/Modal";
 import { toastMessage } from "../../utils/toast.util";
 
 type EditableField = "name" | "phone";
@@ -28,6 +29,7 @@ const ProfilePage = () => {
 
   const [editField, setEditField] = useState<EditableField | null>(null);
   const [passwordOpen, setPasswordOpen] = useState(false);
+  const [pendingPassword, setPendingPassword] = useState<ChangeAdminPasswordSchemaType | null>(null);
 
   const profileForm = useForm<UpdateAdminProfileSchemaType>({
     resolver: zodResolver(updateAdminProfileSchema),
@@ -88,12 +90,21 @@ const ProfilePage = () => {
   };
 
   const onSubmitPassword = (values: ChangeAdminPasswordSchemaType) => {
-    changePassword(values, {
+    setPendingPassword(values);
+  };
+
+  const confirmChangePassword = () => {
+    if (!pendingPassword) return;
+    changePassword(pendingPassword, {
       onSuccess: () => {
         toastMessage.success({ message: "Password changed successfully" });
+        setPendingPassword(null);
         closePasswordForm();
       },
-      onError: (err) => toastMessage.apiError(err),
+      onError: (err) => {
+        toastMessage.apiError(err);
+        setPendingPassword(null);
+      },
     });
   };
 
@@ -256,6 +267,32 @@ const ProfilePage = () => {
           </AnimatePresence>
         </div>
       </div>
+
+      <Modal open={!!pendingPassword} onClose={() => setPendingPassword(null)} title="Change your password?">
+        <p className="mb-5 text-[13px]" style={{ color: "rgba(0,0,0,0.5)" }}>
+          You'll need to use the new password the next time you sign in. Make sure you'll remember it.
+        </p>
+        <div className="flex justify-end gap-2.5">
+          <button
+            type="button"
+            onClick={() => setPendingPassword(null)}
+            disabled={isChangingPassword}
+            className="rounded-xl px-4 py-2.5 text-[13px] font-semibold disabled:opacity-60"
+            style={{ backgroundColor: "rgba(0,0,0,0.05)", color: "#191919" }}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={confirmChangePassword}
+            disabled={isChangingPassword}
+            className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-[#0f172a] disabled:opacity-60"
+            style={{ backgroundColor: "#f5a300" }}
+          >
+            {isChangingPassword ? "Saving..." : "Change password"}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 };
