@@ -116,3 +116,41 @@ export const useDeleteCourse = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: [COURSES_KEY] }),
   });
 };
+
+export type CourseImageType = "primary" | "mentor";
+
+// Independent of useAddCourse/useUpdateCourse — lets an already-created
+// course's primary/mentor image be swapped or cleared on its own, without
+// resubmitting the rest of the course form.
+export const useUploadCourseImage = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ courseId, type, file }: { courseId: string; type: CourseImageType; file: File }) => {
+      const formData = new FormData();
+      formData.append("image", file);
+      formData.append("type", type);
+      const { data } = await axiosInstance.post<ApiSuccess<Course>>(`/admin/courses/${courseId}/images`, formData);
+      return data.data;
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: [COURSES_KEY] });
+      qc.invalidateQueries({ queryKey: [COURSES_KEY, variables.courseId] });
+    },
+  });
+};
+
+export const useDeleteCourseImage = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ courseId, type }: { courseId: string; type: CourseImageType }) => {
+      const { data } = await axiosInstance.delete<ApiSuccess<Course>>(`/admin/courses/${courseId}/images`, {
+        data: { type },
+      });
+      return data.data;
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: [COURSES_KEY] });
+      qc.invalidateQueries({ queryKey: [COURSES_KEY, variables.courseId] });
+    },
+  });
+};

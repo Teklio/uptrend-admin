@@ -44,6 +44,13 @@ const CourseDetailPage = () => {
     return <MainLayoutShimmer />;
   }
 
+  // Unlike deleting the whole course, deleting a single module/video isn't
+  // blocked when the course has paying students — enforcing that would make
+  // ordinary content maintenance impossible on any course that's ever sold
+  // a copy. The caution has to be surfaced here instead.
+  const hasEnrollments = course.enrollmentCount > 0;
+  const enrollmentWarning = `${course.enrollmentCount} student${course.enrollmentCount === 1 ? " has" : "s have"} paid for this course and will lose access to this content immediately. `;
+
   const handleReorderModules = (newOrder: CourseModule[]) => {
     reorderModules.mutate(newOrder.map((m, index) => ({ id: m.id, displayOrder: index })));
   };
@@ -219,7 +226,10 @@ const CourseDetailPage = () => {
         onConfirm={handleDeleteModule}
         isDeleting={deleteModule.isPending}
         title="Delete this module?"
-        description="Its videos will be removed from Bunny too. This cannot be undone."
+        description={
+          (hasEnrollments ? enrollmentWarning : "") +
+          "Its videos will be removed from Bunny too. This cannot be undone."
+        }
       />
 
       <DeleteConfirmModal
@@ -228,7 +238,9 @@ const CourseDetailPage = () => {
         onConfirm={handleDeleteVideo}
         isDeleting={deleteVideo.isPending}
         title="Delete this video?"
-        description="It will be removed from Bunny too. This cannot be undone."
+        description={
+          (hasEnrollments ? enrollmentWarning : "") + "It will be removed from Bunny too. This cannot be undone."
+        }
       />
     </div>
   );

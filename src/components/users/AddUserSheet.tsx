@@ -3,8 +3,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { UserPlus } from "lucide-react";
 import { createUserFormSchema, type CreateUserFormSchemaType } from "../../schemas/user.schema";
 import { useCreateUser } from "../../services/user.service";
+import { useGetStates } from "../../services/state.service";
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "../shared/Sheet";
 import { Input } from "../shared/Input";
+import { SearchableDropdown } from "../shared/SearchableDropdown";
 import { DiscardChangesModal } from "../shared/DiscardChangesModal";
 import { useDiscardGuard } from "../../hooks/useDiscardGuard";
 import { toastMessage } from "../../utils/toast.util";
@@ -25,6 +27,8 @@ const defaultValues: CreateUserFormSchemaType = {
 
 export const AddUserSheet = ({ open, onClose }: AddUserSheetProps) => {
   const { mutate: createUser, isPending } = useCreateUser();
+  const { data: states } = useGetStates();
+  const stateOptions = (states ?? []).map((s) => ({ label: s.name, value: s.name }));
   const form = useForm<CreateUserFormSchemaType>({
     resolver: zodResolver(createUserFormSchema),
     defaultValues,
@@ -71,7 +75,7 @@ export const AddUserSheet = ({ open, onClose }: AddUserSheetProps) => {
                 <Input name="name" label="Full name" placeholder="Jane Doe" />
                 <Input name="email" type="email" label="Email" placeholder="jane@example.com" />
                 <Input name="phone" label="Phone" placeholder="9876543210" />
-                <Input name="state" label="State" placeholder="Tamil Nadu" />
+                <SearchableDropdown name="state" label="State" options={stateOptions} placeholder="Search state..." />
                 <Input name="password" type="password" label="Password" placeholder="Set a password" />
                 <Input
                   name="confirmPassword"

@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { courseFormSchema, type CourseFormSchemaType } from "../../schemas/course.schema";
-import { useAddCourse, useUpdateCourse } from "../../services/course.service";
+import { useAddCourse, useGetCourse, useUpdateCourse } from "../../services/course.service";
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "../shared/Sheet";
 import { Input } from "../shared/Input";
 import { Dropdown } from "../shared/Dropdown";
 import { ImageUpload } from "../shared/ImageUpload";
+import { CourseImageManager } from "./CourseImageManager";
 import { FeaturesInput } from "./FeaturesInput";
 import { DiscardChangesModal } from "../shared/DiscardChangesModal";
 import { useDiscardGuard } from "../../hooks/useDiscardGuard";
@@ -79,6 +80,11 @@ const CourseSheetForm = ({ course, onClose, onRequestClose, onDirtyChange }: Cou
   const isEdit = !!course;
   const { mutate: addCourse, isPending: isAdding } = useAddCourse();
   const { mutate: updateCourse, isPending: isUpdating } = useUpdateCourse();
+  // Edit mode manages its images independently (CourseImageManager, its own
+  // immediate upload/delete calls) — this keeps the sheet's preview in sync
+  // once those mutations invalidate the course query, since `course` itself
+  // is just a snapshot passed down from the list page at the time it opened.
+  const { data: liveCourse } = useGetCourse(course?.id);
 
   const [primaryImage, setPrimaryImage] = useState<File | null>(null);
   const [mentorImage, setMentorImage] = useState<File | null>(null);
@@ -103,9 +109,11 @@ const CourseSheetForm = ({ course, onClose, onRequestClose, onDirtyChange }: Cou
 
   const isPending = isAdding || isUpdating;
 
-  // Image files live outside react-hook-form (they're plain File state, not
-  // registered fields), so isDirty alone wouldn't notice a new image pick.
-  const hasChanges = form.formState.isDirty || !!primaryImage || !!mentorImage;
+  // In add mode, image files are plain File state outside react-hook-form,
+  // so isDirty alone wouldn't notice a new pick. In edit mode images are no
+  // longer part of this form at all — CourseImageManager saves them on its
+  // own the moment they're picked/deleted, so they're excluded here.
+  const hasChanges = form.formState.isDirty || (!isEdit && (!!primaryImage || !!mentorImage));
 
   useEffect(() => {
     onDirtyChange(hasChanges);
@@ -135,22 +143,41 @@ const CourseSheetForm = ({ course, onClose, onRequestClose, onDirtyChange }: Cou
 
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 py-5">
           <div className="grid grid-cols-2 gap-4">
-            <ImageUpload
-              label="Primary image"
-              previewUrl={primaryPreview}
-              onChange={(f) => {
-                setPrimaryImage(f);
-                setPrimaryPreview(f ? URL.createObjectURL(f) : null);
-              }}
-            />
-            <ImageUpload
-              label="Mentor image"
-              previewUrl={mentorPreview}
-              onChange={(f) => {
-                setMentorImage(f);
-                setMentorPreview(f ? URL.createObjectURL(f) : null);
-              }}
-            />
+            {isEdit && course ? (
+              <>
+                <CourseImageManager
+                  label="Primary image"
+                  courseId={course.id}
+                  type="primary"
+                  currentUrl={liveCourse ? liveCourse.primaryImageUrl : course.primaryImageUrl}
+                />
+                <CourseImageManager
+                  label="Mentor image"
+                  courseId={course.id}
+                  type="mentor"
+                  currentUrl={liveCourse ? liveCourse.mentorImageUrl : course.mentorImageUrl}
+                />
+              </>
+            ) : (
+              <>
+                <ImageUpload
+                  label="Primary image"
+                  previewUrl={primaryPreview}
+                  onChange={(f) => {
+                    setPrimaryImage(f);
+                    setPrimaryPreview(f ? URL.createObjectURL(f) : null);
+                  }}
+                />
+                <ImageUpload
+                  label="Mentor image"
+                  previewUrl={mentorPreview}
+                  onChange={(f) => {
+                    setMentorImage(f);
+                    setMentorPreview(f ? URL.createObjectURL(f) : null);
+                  }}
+                />
+              </>
+            )}
           </div>
 
           <Input name="name" label="Course name" placeholder="e.g. Complete Web Development" />

@@ -41,7 +41,7 @@ const FIELDS: TableField[] = [
   { key: "mode", label: "Mode" },
   { key: "status", label: "Status" },
   { key: "date", label: "Date" },
-  { key: "actions", label: "" },
+  { key: "actions", label: "Actions", className: "text-right" },
 ];
 
 const PaymentsPage = () => {
@@ -114,12 +114,12 @@ const PaymentsPage = () => {
       />
 
       <TableFilters onApply={applyFilters} onReset={resetFilters} hasActiveFilters={hasActiveFilters}>
-        <DropdownSelect options={STATUS_OPTIONS} value={draftStatus} onChange={setDraftStatus} placeholder="Any status" />
+        <DropdownSelect options={STATUS_OPTIONS} value={draftStatus} onChange={setDraftStatus} placeholder="All status" />
         <DropdownSelect
           options={PAYMENT_TYPE_OPTIONS}
           value={draftPaymentType}
           onChange={setDraftPaymentType}
-          placeholder="Any type"
+          placeholder="All type"
         />
         <DateRangeFilter
           from={draftDateFrom}
@@ -128,6 +128,8 @@ const PaymentsPage = () => {
             setDraftDateFrom(from);
             setDraftDateTo(to);
           }}
+          fromPlaceholder="Created from"
+          toPlaceholder="Created to"
           className="sm:col-span-2"
         />
       </TableFilters>
@@ -165,15 +167,17 @@ const PaymentsPage = () => {
               {formatDateTime(payment.createdAt)}
             </td>
             <td className="px-4 py-3">
-              <button
-                type="button"
-                title="View"
-                onClick={() => setSelectedPaymentId(payment.id)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-black/5"
-                style={{ color: "#002b7f" }}
-              >
-                <Eye size={15} />
-              </button>
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  title="View"
+                  onClick={() => setSelectedPaymentId(payment.id)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-black/5"
+                  style={{ color: "#002b7f" }}
+                >
+                  <Eye size={15} />
+                </button>
+              </div>
             </td>
           </>
         )}

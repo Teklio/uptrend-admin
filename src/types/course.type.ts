@@ -44,6 +44,9 @@ export interface CourseModule {
 
 export interface CourseDetail extends Course {
   modules: CourseModule[];
+  // Count of SUCCESS payments — used to warn before deleting a module/video,
+  // since (unlike deleting the whole course) that isn't blocked server-side.
+  enrollmentCount: number;
 }
 
 export interface CourseListFilters {

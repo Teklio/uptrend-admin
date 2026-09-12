@@ -28,7 +28,7 @@ const FIELDS: TableField[] = [
   { key: "purchases", label: "Purchases" },
   { key: "status", label: "Status" },
   { key: "joined", label: "Joined" },
-  { key: "actions", label: "" },
+  { key: "actions", label: "Actions", className: "text-right" },
 ];
 
 const UsersPage = () => {
@@ -104,7 +104,7 @@ const UsersPage = () => {
       <SearchInput value={search} onChange={setSearch} placeholder="Search by name, email or phone..." className="sm:max-w-sm" />
 
       <TableFilters onApply={applyFilters} onReset={resetFilters} hasActiveFilters={hasActiveFilters}>
-        <DropdownSelect options={ACTIVE_OPTIONS} value={draftIsActive} onChange={setDraftIsActive} placeholder="Any status" />
+        <DropdownSelect options={ACTIVE_OPTIONS} value={draftIsActive} onChange={setDraftIsActive} placeholder="All status" />
         <DateRangeFilter
           from={draftDateFrom}
           to={draftDateTo}
@@ -112,6 +112,8 @@ const UsersPage = () => {
             setDraftDateFrom(from);
             setDraftDateTo(to);
           }}
+          fromPlaceholder="Registered from"
+          toPlaceholder="Registered to"
           className="sm:col-span-2"
         />
       </TableFilters>

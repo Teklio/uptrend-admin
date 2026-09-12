@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Pencil, Trash2, FolderOpen, ChevronDown, CheckCircle2 } from "lucide-react";
+import { Plus, Pencil, Trash2, FolderOpen, Eye } from "lucide-react";
 import { useDeleteCourse, useGetCourses, useToggleCoursePublish } from "../../services/course.service";
 import { useSearchDebounce } from "../../hooks/useSearchDebounce";
 import { Table, type TableField } from "../../components/shared/Table";
@@ -11,10 +11,9 @@ import { DropdownSelect } from "../../components/shared/Dropdown";
 import { DateRangeFilter } from "../../components/shared/DateRangeFilter";
 import { Toggle } from "../../components/shared/Toggle";
 import { Modal } from "../../components/shared/Modal";
-import { ExpandableText } from "../../components/shared/ExpandableText";
-import { ExpandableList } from "../../components/shared/ExpandableList";
 import { DeleteConfirmModal } from "../../components/shared/DeleteConfirmModal";
 import { CourseSheet } from "../../components/courses/CourseSheet";
+import { CourseViewSheet } from "../../components/courses/CourseViewSheet";
 import { formatCurrency, formatDate } from "../../utils/format.util";
 import { toastMessage } from "../../utils/toast.util";
 import { COURSE_LANGUAGE_OPTIONS } from "../../utils/language.util";
@@ -63,16 +62,7 @@ const CoursesPage = () => {
   const [sheetState, setSheetState] = useState<SheetState>({ open: false });
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
   const [publishTarget, setPublishTarget] = useState<Course | null>(null);
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-
-  const toggleExpanded = (courseId: string) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(courseId)) next.delete(courseId);
-      else next.add(courseId);
-      return next;
-    });
-  };
+  const [courseToView, setCourseToView] = useState<Course | null>(null);
 
   const filters: CourseListFilters = {
     ...appliedFilters,
@@ -169,13 +159,13 @@ const CoursesPage = () => {
           options={COURSE_LANGUAGE_OPTIONS}
           value={draftLanguage}
           onChange={setDraftLanguage}
-          placeholder="Any language"
+          placeholder="All language"
         />
         <DropdownSelect
           options={PUBLISHED_OPTIONS}
           value={draftIsPublished}
           onChange={setDraftIsPublished}
-          placeholder="Any status"
+          placeholder="All status"
         />
         <div className="flex gap-2">
           <input
@@ -203,6 +193,8 @@ const CoursesPage = () => {
             setDraftDateFrom(from);
             setDraftDateTo(to);
           }}
+          fromPlaceholder="Created from"
+          toPlaceholder="Created to"
           className="sm:col-span-2"
         />
       </TableFilters>
@@ -214,114 +206,10 @@ const CoursesPage = () => {
         error={error}
         keyExtractor={(c) => c.id}
         emptyMessage="No courses yet"
-        isRowExpanded={(course) => expandedIds.has(course.id)}
-        renderExpandedRow={(course) => (
-          <div className="flex flex-col gap-4 pt-1 sm:flex-row">
-            <div className="flex shrink-0 gap-3">
-              <div>
-                <p className="mb-1.5 text-[11px] font-medium" style={{ color: "rgba(0,0,0,0.4)" }}>
-                  Primary image
-                </p>
-                {course.primaryImageUrl ? (
-                  <img src={course.primaryImageUrl} alt="" className="h-24 w-24 rounded-xl object-cover" />
-                ) : (
-                  <div
-                    className="flex h-24 w-24 items-center justify-center rounded-xl text-center text-[11px]"
-                    style={{ backgroundColor: "rgba(0,0,0,0.06)", color: "rgba(0,0,0,0.35)" }}
-                  >
-                    No image
-                  </div>
-                )}
-              </div>
-              <div>
-                <p className="mb-1.5 text-[11px] font-medium" style={{ color: "rgba(0,0,0,0.4)" }}>
-                  Mentor image
-                </p>
-                {course.mentorImageUrl ? (
-                  <img src={course.mentorImageUrl} alt="" className="h-24 w-24 rounded-xl object-cover" />
-                ) : (
-                  <div
-                    className="flex h-24 w-24 items-center justify-center rounded-xl text-center text-[11px]"
-                    style={{ backgroundColor: "rgba(0,0,0,0.06)", color: "rgba(0,0,0,0.35)" }}
-                  >
-                    No image
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="grid min-w-0 flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="min-w-0">
-                <p className="mb-1 text-[11px] font-medium" style={{ color: "rgba(0,0,0,0.4)" }}>
-                  Description
-                </p>
-                <ExpandableText
-                  text={course.description || "—"}
-                  className="text-[13px]"
-                  style={{ color: "#191919" }}
-                />
-              </div>
-              <div className="min-w-0">
-                <p className="mb-1 text-[11px] font-medium" style={{ color: "rgba(0,0,0,0.4)" }}>
-                  Mentor
-                </p>
-                <p className="wrap-break-word text-[13px]" style={{ color: "#191919" }}>
-                  {course.mentorName || "—"}
-                </p>
-              </div>
-              <div className="min-w-0">
-                <p className="mb-1 text-[11px] font-medium" style={{ color: "rgba(0,0,0,0.4)" }}>
-                  Pricing
-                </p>
-                <p className="text-[13px]" style={{ color: "#191919" }}>
-                  {formatCurrency(course.price)}
-                  {Number(course.actualPrice) > Number(course.price) && (
-                    <span className="ml-1.5 line-through" style={{ color: "rgba(0,0,0,0.35)" }}>
-                      {formatCurrency(course.actualPrice)}
-                    </span>
-                  )}
-                  {" + "}
-                  {formatCurrency(course.extraFee)} internet handling fee
-                </p>
-                <p className="mt-0.5 text-[12px]" style={{ color: "rgba(0,0,0,0.4)" }}>
-                  Student pays {formatCurrency(Number(course.price) + Number(course.extraFee))} total
-                </p>
-              </div>
-              <div className="min-w-0">
-                <p className="mb-1.5 text-[11px] font-medium" style={{ color: "rgba(0,0,0,0.4)" }}>
-                  Features
-                </p>
-                <ExpandableList
-                  items={course.features}
-                  renderItem={(f, i) => (
-                    <li key={i} className="flex min-w-0 items-start gap-2">
-                      <CheckCircle2 size={14} className="mt-0.5 shrink-0" style={{ color: "#002b7f" }} />
-                      <span className="wrap-break-word min-w-0 text-[13px]" style={{ color: "#191919" }}>
-                        {f}
-                      </span>
-                    </li>
-                  )}
-                />
-              </div>
-            </div>
-          </div>
-        )}
         formatRow={(course) => (
           <>
             <td className="px-4 py-3">
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => toggleExpanded(course.id)}
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg hover:bg-black/5"
-                  style={{ color: "rgba(0,0,0,0.4)" }}
-                >
-                  <ChevronDown
-                    size={15}
-                    className="transition-transform"
-                    style={{ transform: expandedIds.has(course.id) ? undefined : "rotate(-90deg)" }}
-                  />
-                </button>
                 {course.primaryImageUrl ? (
                   <img src={course.primaryImageUrl} alt="" className="h-10 w-10 rounded-lg object-cover" />
                 ) : (
@@ -374,6 +262,15 @@ const CoursesPage = () => {
               <div className="flex items-center justify-end gap-1.5">
                 <button
                   type="button"
+                  title="View"
+                  onClick={() => setCourseToView(course)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-black/5"
+                  style={{ color: "#002b7f" }}
+                >
+                  <Eye size={15} />
+                </button>
+                <button
+                  type="button"
                   title="Manage content"
                   onClick={() => navigate(`/courses/${course.id}`)}
                   className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-black/5"
@@ -421,6 +318,8 @@ const CoursesPage = () => {
         course={sheetState.open && sheetState.mode === "edit" ? sheetState.course : null}
       />
 
+      <CourseViewSheet open={!!courseToView} onClose={() => setCourseToView(null)} course={courseToView} />
+
       <DeleteConfirmModal
         isOpen={!!courseToDelete}
         onClose={() => setCourseToDelete(null)}
@@ -437,8 +336,8 @@ const CoursesPage = () => {
       >
         <p className="mb-5 text-[13px]" style={{ color: "rgba(0,0,0,0.5)" }}>
           {publishTarget?.isPublished
-            ? "It will disappear from the storefront and can't be purchased anymore. Students who already own it keep their access."
-            : "It will become visible in the storefront and available for purchase."}
+            ? "It will disappear from the website and can't be purchased anymore. Students who already own it keep their access."
+            : "It will become visible on the website and available for purchase."}
         </p>
         <div className="flex justify-end gap-2.5">
           <button
