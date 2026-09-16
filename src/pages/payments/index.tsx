@@ -59,6 +59,18 @@ const PaymentsPage = () => {
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
   const [offlineModalOpen, setOfflineModalOpen] = useState(false);
 
+  // Reset to page 1 whenever the search term settles on a new value —
+  // during render (React's documented pattern for this), not an effect,
+  // so it takes effect before the now-stale page is ever fetched. Otherwise
+  // a search while sitting on page 3+ keeps requesting page 3 of the new,
+  // smaller result set — showing "no results" even when matches exist on
+  // page 1.
+  const [prevDebouncedSearch, setPrevDebouncedSearch] = useState(debouncedSearch);
+  if (debouncedSearch !== prevDebouncedSearch) {
+    setPrevDebouncedSearch(debouncedSearch);
+    setPage(1);
+  }
+
   const filters: PaymentListFilters = {
     ...appliedFilters,
     page,
