@@ -36,6 +36,13 @@ const setTask = (next: UploadTask | null) => {
   emit();
 };
 
+// A finished or failed task is just a leftover notification, not an active
+// transfer — it must not hold the "only one upload at a time" slot. Shared
+// by isUploading() and start() so they can never disagree the way they used
+// to (start() blocked on this task's mere presence, while the UI's own
+// "is another upload active" check already only looked at these two phases).
+const isActive = (t: UploadTask | null) => t?.phase === "creating" || t?.phase === "uploading";
+
 export const videoUploadManager = {
   subscribe(listener: Listener) {
     listeners.add(listener);
@@ -47,14 +54,16 @@ export const videoUploadManager = {
   },
 
   isUploading() {
-    return task?.phase === "creating" || task?.phase === "uploading";
+    return isActive(task);
   },
 
   async start(courseId: string, moduleId: string, file: File, values: VideoFormValues) {
     // Set synchronously, before any await, so a second call fired in the
-    // same tick (double-click, or Enter + click) sees a non-null task and
-    // bails out instead of creating a second video record.
-    if (task) {
+    // same tick (double-click, or Enter + click) sees an active task and
+    // bails out instead of creating a second video record. A leftover
+    // done/error task from a previous upload is simply replaced below —
+    // it already delivered its result, so nothing is lost by superseding it.
+    if (isActive(task)) {
       throw new Error("Another upload is already in progress — wait for it to finish or dismiss it first.");
     }
     setTask({ courseId, moduleId, title: values.title, phase: "creating", progress: 0, errorMessage: "" });

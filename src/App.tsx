@@ -15,6 +15,7 @@ const PaymentsPage = lazy(() => import("./pages/payments"));
 const UsersPage = lazy(() => import("./pages/users"));
 const ReviewsPage = lazy(() => import("./pages/reviews"));
 const ProfilePage = lazy(() => import("./pages/profile"));
+const CertificatePage = lazy(() => import("./pages/certificate"));
 
 // A data router (rather than plain BrowserRouter) is required for
 // useBlocker, which the course-detail page uses to confirm in-app
@@ -37,6 +38,9 @@ const router = createBrowserRouter(
       <Route element={<ProtectedRouteAfterLogin />}>
         <Route path="/auth/signin" element={<LoginPage />} />
       </Route>
+
+      {/* Design-review only: unauthenticated so it's quick to open and share for feedback. */}
+      <Route path="/certificate" element={<CertificatePage />} />
     </>,
   ),
 );
