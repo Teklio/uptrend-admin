@@ -66,7 +66,7 @@ export const ModuleAccordionItem = ({
               {module.title}
             </p>
             {module.description && (
-              <p className="mt-0.5 truncate text-[12.5px]" style={{ color: "rgba(0,0,0,0.65)" }}>
+              <p className="mt-0.5 wrap-break-word text-[12.5px]" style={{ color: "rgba(0,0,0,0.65)" }}>
                 {module.description}
               </p>
             )}
