@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Users, UserCheck, BookOpen, Wallet, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Users, UserCheck, BookOpen, Wallet, CheckCircle2, Clock, XCircle, X } from "lucide-react";
 import { useDashboardStats } from "../../services/dashboard.service";
 import { StatsCard } from "../../components/dashboard/StatsCard";
 import { RecentPaymentsTable } from "../../components/dashboard/RecentPaymentsTable";
+import { DateRangeFilter } from "../../components/shared/DateRangeFilter";
 import { formatCurrency } from "../../utils/format.util";
 
 const PERIODS = [
@@ -12,8 +13,39 @@ const PERIODS = [
 ];
 
 const DashboardPage = () => {
-  const [period, setPeriod] = useState<"7d" | "30d" | "90d">("30d");
-  const { data, isLoading } = useDashboardStats({ period });
+  const [period, setPeriod] = useState<"7d" | "30d" | "90d" | undefined>("30d");
+  const [dateFrom, setDateFrom] = useState<Date | null>(null);
+  const [dateTo, setDateTo] = useState<Date | null>(null);
+
+  // Mutually exclusive with `period` — the server prefers `period` when both
+  // are present (admin.dashboard.controller.ts), so a preset click must
+  // clear any custom range and vice versa, or picking a custom range would
+  // silently do nothing while a preset is still active.
+  const hasCustomRange = Boolean(dateFrom || dateTo);
+
+  const selectPeriod = (value: "7d" | "30d" | "90d") => {
+    setPeriod(value);
+    setDateFrom(null);
+    setDateTo(null);
+  };
+
+  const selectCustomRange = (range: { from: Date | null; to: Date | null }) => {
+    setPeriod(undefined);
+    setDateFrom(range.from);
+    setDateTo(range.to);
+  };
+
+  const clearCustomRange = () => {
+    setDateFrom(null);
+    setDateTo(null);
+    setPeriod("30d");
+  };
+
+  const { data, isLoading } = useDashboardStats({
+    period,
+    dateFrom: dateFrom ? dateFrom.toISOString() : undefined,
+    dateTo: dateTo ? dateTo.toISOString() : undefined,
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -21,21 +53,38 @@ const DashboardPage = () => {
         <h1 className="text-[20px] font-semibold" style={{ color: "#191919" }}>
           Dashboard
         </h1>
-        <div className="flex rounded-xl p-1" style={{ backgroundColor: "#f0f0f0" }}>
-          {PERIODS.map((p) => (
-            <button
-              key={p.value}
-              type="button"
-              onClick={() => setPeriod(p.value)}
-              className="rounded-lg px-3.5 py-1.5 text-[12px] font-semibold transition-colors"
-              style={{
-                backgroundColor: period === p.value ? "#002b7f" : "transparent",
-                color: period === p.value ? "#fff" : "rgba(0,0,0,0.55)",
-              }}
-            >
-              {p.label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex rounded-xl p-1" style={{ backgroundColor: "#f0f0f0" }}>
+            {PERIODS.map((p) => (
+              <button
+                key={p.value}
+                type="button"
+                onClick={() => selectPeriod(p.value)}
+                className="rounded-lg px-3.5 py-1.5 text-[12px] font-semibold transition-colors"
+                style={{
+                  backgroundColor: !hasCustomRange && period === p.value ? "#002b7f" : "transparent",
+                  color: !hasCustomRange && period === p.value ? "#fff" : "rgba(0,0,0,0.55)",
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <DateRangeFilter from={dateFrom} to={dateTo} onChange={selectCustomRange} className="w-64" />
+            {hasCustomRange && (
+              <button
+                type="button"
+                onClick={clearCustomRange}
+                title="Clear custom range"
+                className="rounded-lg p-2 transition-colors hover:bg-[#f0f0f0]"
+                style={{ color: "rgba(0,0,0,0.45)" }}
+              >
+                <X size={15} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
