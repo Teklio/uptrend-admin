@@ -54,7 +54,7 @@ export const ModuleAccordionItem = ({
         <button
           type="button"
           onClick={() => setExpanded((e) => !e)}
-          className="flex flex-1 items-center gap-2.5 text-left"
+          className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
         >
           <ChevronDown
             size={16}
@@ -66,7 +66,7 @@ export const ModuleAccordionItem = ({
               {module.title}
             </p>
             {module.description && (
-              <p className="mt-0.5 truncate text-[12.5px]" style={{ color: "rgba(0,0,0,0.45)" }}>
+              <p className="mt-0.5 truncate text-[12.5px]" style={{ color: "rgba(0,0,0,0.65)" }}>
                 {module.description}
               </p>
             )}

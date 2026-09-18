@@ -35,7 +35,7 @@ export const VideoRow = ({ video, index, dragHandle, onPlay, onSync, isSyncing, 
         {video.title}
       </p>
       {video.description && (
-        <p className="mt-0.5 truncate text-[12px]" style={{ color: "rgba(0,0,0,0.42)" }}>
+        <p className="mt-0.5 truncate text-[12px]" style={{ color: "rgba(0,0,0,0.65)" }}>
           {video.description}
         </p>
       )}
