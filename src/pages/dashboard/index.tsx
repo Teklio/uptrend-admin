@@ -72,7 +72,7 @@ const DashboardPage = () => {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <DateRangeFilter from={dateFrom} to={dateTo} onChange={selectCustomRange} className="w-64" />
+            <DateRangeFilter from={dateFrom} to={dateTo} onChange={selectCustomRange} className="w-96" />
             {hasCustomRange && (
               <button
                 type="button"
