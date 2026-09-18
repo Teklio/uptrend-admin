@@ -16,6 +16,8 @@ export const useGetCourses = (filters: CourseListFilters) =>
       return data.data;
     },
     placeholderData: (prev) => prev,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
 export const useGetCourse = (courseId: string | undefined) =>
@@ -26,6 +28,7 @@ export const useGetCourse = (courseId: string | undefined) =>
       return data.data;
     },
     enabled: !!courseId,
+    staleTime: 5 * 60 * 1000,
   });
 
 export interface CourseImageFiles {
@@ -41,9 +44,8 @@ const buildCourseFormData = (values: CourseFormSchemaType, files: CourseImageFil
   if (values.mentorName) formData.append("mentorName", values.mentorName);
   formData.append("price", String(values.price));
   formData.append("actualPrice", String(values.actualPrice));
+  formData.append("extraFee", String(values.extraFee));
   formData.append("features", JSON.stringify(values.features));
-  formData.append("highlights", JSON.stringify(values.highlights));
-  formData.append("isPublished", String(values.isPublished));
   if (files.primaryImage) formData.append("primaryImage", files.primaryImage);
   if (files.mentorImage) formData.append("mentorImage", files.mentorImage);
   return formData;
@@ -84,6 +86,27 @@ export const useUpdateCourse = () => {
   });
 };
 
+// Lightweight, single-field PATCH — reuses the same update endpoint as
+// useUpdateCourse but sends only isPublished. Still goes through FormData
+// (not a plain JSON body) since the route has multer's courseImageFields
+// middleware attached ahead of the controller, and every other caller of
+// this endpoint already goes through that same multipart path.
+export const useToggleCoursePublish = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ courseId, isPublished }: { courseId: string; isPublished: boolean }) => {
+      const formData = new FormData();
+      formData.append("isPublished", String(isPublished));
+      const { data } = await axiosInstance.patch<ApiSuccess<Course>>(`/admin/courses/${courseId}`, formData);
+      return data.data;
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: [COURSES_KEY] });
+      qc.invalidateQueries({ queryKey: [COURSES_KEY, variables.courseId] });
+    },
+  });
+};
+
 export const useDeleteCourse = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -91,5 +114,43 @@ export const useDeleteCourse = () => {
       await axiosInstance.delete(`/admin/courses/${courseId}`);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [COURSES_KEY] }),
+  });
+};
+
+export type CourseImageType = "primary" | "mentor";
+
+// Independent of useAddCourse/useUpdateCourse — lets an already-created
+// course's primary/mentor image be swapped or cleared on its own, without
+// resubmitting the rest of the course form.
+export const useUploadCourseImage = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ courseId, type, file }: { courseId: string; type: CourseImageType; file: File }) => {
+      const formData = new FormData();
+      formData.append("image", file);
+      formData.append("type", type);
+      const { data } = await axiosInstance.post<ApiSuccess<Course>>(`/admin/courses/${courseId}/images`, formData);
+      return data.data;
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: [COURSES_KEY] });
+      qc.invalidateQueries({ queryKey: [COURSES_KEY, variables.courseId] });
+    },
+  });
+};
+
+export const useDeleteCourseImage = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ courseId, type }: { courseId: string; type: CourseImageType }) => {
+      const { data } = await axiosInstance.delete<ApiSuccess<Course>>(`/admin/courses/${courseId}/images`, {
+        data: { type },
+      });
+      return data.data;
+    },
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: [COURSES_KEY] });
+      qc.invalidateQueries({ queryKey: [COURSES_KEY, variables.courseId] });
+    },
   });
 };

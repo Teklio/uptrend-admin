@@ -7,6 +7,8 @@ interface DateRangeFilterProps {
   to: Date | null;
   onChange: (range: { from: Date | null; to: Date | null }) => void;
   label?: string;
+  fromPlaceholder?: string;
+  toPlaceholder?: string;
   className?: string;
 }
 
@@ -17,7 +19,15 @@ interface DateRangeFilterProps {
 const inputClassName =
   "w-full rounded-xl py-2.5 pl-9 pr-3 text-[13px] outline-none bg-[#f0f0f0] border border-[rgba(0,0,0,0.07)]";
 
-export const DateRangeFilter = ({ from, to, onChange, label, className }: DateRangeFilterProps) => (
+export const DateRangeFilter = ({
+  from,
+  to,
+  onChange,
+  label,
+  fromPlaceholder = "From",
+  toPlaceholder = "To",
+  className,
+}: DateRangeFilterProps) => (
   <div className={className}>
     {label && (
       <label className="mb-1.5 block text-[13px] font-medium" style={{ color: "#191919" }}>
@@ -37,7 +47,7 @@ export const DateRangeFilter = ({ from, to, onChange, label, className }: DateRa
           selectsStart
           startDate={from}
           endDate={to}
-          placeholderText="From"
+          placeholderText={fromPlaceholder}
           dateFormat="dd MMM yyyy"
           className={inputClassName}
           wrapperClassName="w-full"
@@ -57,7 +67,7 @@ export const DateRangeFilter = ({ from, to, onChange, label, className }: DateRa
           startDate={from}
           endDate={to}
           minDate={from ?? undefined}
-          placeholderText="To"
+          placeholderText={toPlaceholder}
           dateFormat="dd MMM yyyy"
           className={inputClassName}
           wrapperClassName="w-full"

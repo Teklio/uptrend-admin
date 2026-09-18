@@ -65,10 +65,12 @@ export const useReorderModules = (courseId: string) => {
 
       return { previous };
     },
+    // No onSettled invalidate: the optimistic order is already confirmed
+    // correct once the PATCH resolves, so refetching here would just replay
+    // dnd-kit's settle animation a second time right after it finishes.
     onError: (_err, _vars, context) => {
       if (context?.previous) qc.setQueryData(key, context.previous);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: key }),
   });
 };
 

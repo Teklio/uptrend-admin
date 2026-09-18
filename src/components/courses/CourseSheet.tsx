@@ -1,13 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { courseFormSchema, type CourseFormSchemaType } from "../../schemas/course.schema";
-import { useAddCourse, useUpdateCourse } from "../../services/course.service";
+import { useAddCourse, useGetCourse, useUpdateCourse } from "../../services/course.service";
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "../shared/Sheet";
 import { Input } from "../shared/Input";
+import { Dropdown } from "../shared/Dropdown";
 import { ImageUpload } from "../shared/ImageUpload";
+import { CourseImageManager } from "./CourseImageManager";
 import { FeaturesInput } from "./FeaturesInput";
+import { DiscardChangesModal } from "../shared/DiscardChangesModal";
+import { useDiscardGuard } from "../../hooks/useDiscardGuard";
 import { toastMessage } from "../../utils/toast.util";
+import { COURSE_LANGUAGE_OPTIONS } from "../../utils/language.util";
 import type { Course } from "../../types/course.type";
 
 interface CourseSheetProps {
@@ -16,6 +21,12 @@ interface CourseSheetProps {
   course?: Course | null;
 }
 
+// Existing courses may hold a legacy free-text value (from before language
+// became a fixed set) that doesn't match either option — fall back to
+// unselected rather than letting an invalid value slip past the resolver.
+const normalizeLanguage = (value: string | null): CourseFormSchemaType["language"] =>
+  value === "english" || value === "malayalam" ? value : "";
+
 const emptyDefaults: CourseFormSchemaType = {
   name: "",
   description: "",
@@ -23,32 +34,57 @@ const emptyDefaults: CourseFormSchemaType = {
   mentorName: "",
   price: 0,
   actualPrice: 0,
+  extraFee: 0,
   features: [],
-  highlights: [],
-  isPublished: false,
 };
 
 // Outer shell only handles the Sheet chrome/animation. The form itself is
 // only ever rendered while `open` is true, keyed by the target course — so
 // every open gets a freshly-mounted form initialized straight from props
 // (via lazy useState initializers), with no reset-on-open effect needed.
-export const CourseSheet = ({ open, onClose, course }: CourseSheetProps) => (
-  <Sheet open={open} onOpenChange={(o: boolean) => !o && onClose()}>
-    <SheetContent open={open}>
-      {open && <CourseSheetForm key={course?.id ?? "add"} course={course ?? null} onClose={onClose} />}
-    </SheetContent>
-  </Sheet>
-);
+// `hasChanges` is lifted up from the form so backdrop clicks, Escape, and
+// the header's X button — none of which the form itself sees — can also be
+// guarded by the same "discard changes?" confirmation as the Cancel button.
+export const CourseSheet = ({ open, onClose, course }: CourseSheetProps) => {
+  const [hasChanges, setHasChanges] = useState(false);
+  const { confirmOpen, requestClose, confirmDiscard, cancelDiscard } = useDiscardGuard(hasChanges, onClose);
+
+  return (
+    <>
+      <Sheet open={open} onOpenChange={(o: boolean) => !o && requestClose()}>
+        <SheetContent open={open}>
+          {open && (
+            <CourseSheetForm
+              key={course?.id ?? "add"}
+              course={course ?? null}
+              onClose={onClose}
+              onRequestClose={requestClose}
+              onDirtyChange={setHasChanges}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
+      <DiscardChangesModal open={confirmOpen} onCancel={cancelDiscard} onConfirm={confirmDiscard} />
+    </>
+  );
+};
 
 interface CourseSheetFormProps {
   course: Course | null;
   onClose: () => void;
+  onRequestClose: () => void;
+  onDirtyChange: (hasChanges: boolean) => void;
 }
 
-const CourseSheetForm = ({ course, onClose }: CourseSheetFormProps) => {
+const CourseSheetForm = ({ course, onClose, onRequestClose, onDirtyChange }: CourseSheetFormProps) => {
   const isEdit = !!course;
   const { mutate: addCourse, isPending: isAdding } = useAddCourse();
   const { mutate: updateCourse, isPending: isUpdating } = useUpdateCourse();
+  // Edit mode manages its images independently (CourseImageManager, its own
+  // immediate upload/delete calls) — this keeps the sheet's preview in sync
+  // once those mutations invalidate the course query, since `course` itself
+  // is just a snapshot passed down from the list page at the time it opened.
+  const { data: liveCourse } = useGetCourse(course?.id);
 
   const [primaryImage, setPrimaryImage] = useState<File | null>(null);
   const [mentorImage, setMentorImage] = useState<File | null>(null);
@@ -61,18 +97,27 @@ const CourseSheetForm = ({ course, onClose }: CourseSheetFormProps) => {
       ? {
           name: course.name,
           description: course.description ?? "",
-          language: course.language ?? "",
+          language: normalizeLanguage(course.language),
           mentorName: course.mentorName ?? "",
           price: Number(course.price),
           actualPrice: Number(course.actualPrice),
+          extraFee: Number(course.extraFee),
           features: course.features,
-          highlights: course.highlights,
-          isPublished: course.isPublished,
         }
       : emptyDefaults,
   });
 
   const isPending = isAdding || isUpdating;
+
+  // In add mode, image files are plain File state outside react-hook-form,
+  // so isDirty alone wouldn't notice a new pick. In edit mode images are no
+  // longer part of this form at all — CourseImageManager saves them on its
+  // own the moment they're picked/deleted, so they're excluded here.
+  const hasChanges = form.formState.isDirty || (!isEdit && (!!primaryImage || !!mentorImage));
+
+  useEffect(() => {
+    onDirtyChange(hasChanges);
+  }, [hasChanges, onDirtyChange]);
 
   const onSubmit = (values: CourseFormSchemaType) => {
     const files = { primaryImage, mentorImage };
@@ -98,35 +143,62 @@ const CourseSheetForm = ({ course, onClose }: CourseSheetFormProps) => {
 
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-6 py-5">
           <div className="grid grid-cols-2 gap-4">
-            <ImageUpload
-              label="Primary image"
-              previewUrl={primaryPreview}
-              onChange={(f) => {
-                setPrimaryImage(f);
-                setPrimaryPreview(f ? URL.createObjectURL(f) : null);
-              }}
-            />
-            <ImageUpload
-              label="Mentor image"
-              previewUrl={mentorPreview}
-              onChange={(f) => {
-                setMentorImage(f);
-                setMentorPreview(f ? URL.createObjectURL(f) : null);
-              }}
-            />
+            {isEdit && course ? (
+              <>
+                <CourseImageManager
+                  label="Primary image"
+                  courseId={course.id}
+                  type="primary"
+                  currentUrl={liveCourse ? liveCourse.primaryImageUrl : course.primaryImageUrl}
+                />
+                <CourseImageManager
+                  label="Mentor image"
+                  courseId={course.id}
+                  type="mentor"
+                  currentUrl={liveCourse ? liveCourse.mentorImageUrl : course.mentorImageUrl}
+                />
+              </>
+            ) : (
+              <>
+                <ImageUpload
+                  label="Primary image"
+                  previewUrl={primaryPreview}
+                  onChange={(f) => {
+                    setPrimaryImage(f);
+                    setPrimaryPreview(f ? URL.createObjectURL(f) : null);
+                  }}
+                />
+                <ImageUpload
+                  label="Mentor image"
+                  previewUrl={mentorPreview}
+                  onChange={(f) => {
+                    setMentorImage(f);
+                    setMentorPreview(f ? URL.createObjectURL(f) : null);
+                  }}
+                />
+              </>
+            )}
           </div>
 
           <Input name="name" label="Course name" placeholder="e.g. Complete Web Development" />
           <Input name="description" type="textarea" label="Description" rows={4} />
 
           <div className="grid grid-cols-2 gap-4">
-            <Input name="language" label="Language" placeholder="English" />
+            <Dropdown name="language" label="Language" options={COURSE_LANGUAGE_OPTIONS} placeholder="Select language" />
             <Input name="mentorName" label="Mentor name" placeholder="Jane Doe" />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <Input name="price" type="number" label="Price (₹)" />
             <Input name="actualPrice" type="number" label="Actual price (₹)" />
+          </div>
+
+          <div>
+            <Input name="extraFee" type="number" label="Internet handling fee (₹)" placeholder="0" />
+            <p className="mt-1.5 text-[12px]" style={{ color: "rgba(0,0,0,0.4)" }}>
+              Added on top of the price at checkout and shown to students as "Internet handling fee". Leave at 0 for
+              no extra fee.
+            </p>
           </div>
 
           <Controller
@@ -141,40 +213,12 @@ const CourseSheetForm = ({ course, onClose }: CourseSheetFormProps) => {
               />
             )}
           />
-          <Controller
-            name="highlights"
-            control={form.control}
-            render={({ field }) => (
-              <FeaturesInput
-                label="Highlights"
-                value={field.value}
-                onChange={field.onChange}
-                placeholder="Add a highlight and press Enter"
-              />
-            )}
-          />
-
-          <Controller
-            name="isPublished"
-            control={form.control}
-            render={({ field }) => (
-              <label className="flex items-center gap-2.5 text-[13px] font-medium" style={{ color: "#191919" }}>
-                <input
-                  type="checkbox"
-                  checked={field.value}
-                  onChange={(e) => field.onChange(e.target.checked)}
-                  className="h-4 w-4 rounded accent-[#7e14ff]"
-                />
-                Published (visible on the public storefront)
-              </label>
-            )}
-          />
         </div>
 
         <SheetFooter>
           <button
             type="button"
-            onClick={onClose}
+            onClick={onRequestClose}
             className="rounded-xl px-4 py-2.5 text-[13px] font-semibold"
             style={{ backgroundColor: "rgba(0,0,0,0.05)", color: "#191919" }}
           >
@@ -182,9 +226,9 @@ const CourseSheetForm = ({ course, onClose }: CourseSheetFormProps) => {
           </button>
           <button
             type="submit"
-            disabled={isPending}
-            className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-60"
-            style={{ backgroundColor: "#7e14ff" }}
+            disabled={isPending || !hasChanges}
+            className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-[#0f172a] disabled:opacity-60"
+            style={{ backgroundColor: "#f5a300" }}
           >
             {isPending ? "Saving..." : isEdit ? "Save changes" : "Create course"}
           </button>

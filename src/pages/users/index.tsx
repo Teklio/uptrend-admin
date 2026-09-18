@@ -11,7 +11,7 @@ import { DateRangeFilter } from "../../components/shared/DateRangeFilter";
 import { StatusBadge } from "../../components/shared/StatusBadge";
 import { Modal } from "../../components/shared/Modal";
 import { UserViewSheet } from "../../components/users/UserViewSheet";
-import { AddUserModal } from "../../components/users/AddUserModal";
+import { AddUserSheet } from "../../components/users/AddUserSheet";
 import { formatDate } from "../../utils/format.util";
 import { toastMessage } from "../../utils/toast.util";
 import type { AdminUser, UserListFilters } from "../../types/user.type";
@@ -28,7 +28,7 @@ const FIELDS: TableField[] = [
   { key: "purchases", label: "Purchases" },
   { key: "status", label: "Status" },
   { key: "joined", label: "Joined" },
-  { key: "actions", label: "" },
+  { key: "actions", label: "Actions", className: "text-right" },
 ];
 
 const UsersPage = () => {
@@ -45,6 +45,18 @@ const UsersPage = () => {
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [statusTarget, setStatusTarget] = useState<AdminUser | null>(null);
   const [addUserOpen, setAddUserOpen] = useState(false);
+
+  // Reset to page 1 whenever the search term settles on a new value —
+  // during render (React's documented pattern for this), not an effect,
+  // so it takes effect before the now-stale page is ever fetched. Otherwise
+  // a search while sitting on page 3+ keeps requesting page 3 of the new,
+  // smaller result set — showing "no results" even when matches exist on
+  // page 1.
+  const [prevDebouncedSearch, setPrevDebouncedSearch] = useState(debouncedSearch);
+  if (debouncedSearch !== prevDebouncedSearch) {
+    setPrevDebouncedSearch(debouncedSearch);
+    setPage(1);
+  }
 
   const filters: UserListFilters = { ...appliedFilters, page, limit, search: debouncedSearch || undefined };
   const { data, isLoading, error } = useGetUsers(filters);
@@ -93,8 +105,8 @@ const UsersPage = () => {
         <button
           type="button"
           onClick={() => setAddUserOpen(true)}
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white"
-          style={{ backgroundColor: "#7e14ff" }}
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-[#0f172a]"
+          style={{ backgroundColor: "#f5a300" }}
         >
           <Plus size={16} />
           Add user
@@ -104,7 +116,7 @@ const UsersPage = () => {
       <SearchInput value={search} onChange={setSearch} placeholder="Search by name, email or phone..." className="sm:max-w-sm" />
 
       <TableFilters onApply={applyFilters} onReset={resetFilters} hasActiveFilters={hasActiveFilters}>
-        <DropdownSelect options={ACTIVE_OPTIONS} value={draftIsActive} onChange={setDraftIsActive} placeholder="Any status" />
+        <DropdownSelect options={ACTIVE_OPTIONS} value={draftIsActive} onChange={setDraftIsActive} placeholder="All status" />
         <DateRangeFilter
           from={draftDateFrom}
           to={draftDateTo}
@@ -112,6 +124,8 @@ const UsersPage = () => {
             setDraftDateFrom(from);
             setDraftDateTo(to);
           }}
+          fromPlaceholder="Registered from"
+          toPlaceholder="Registered to"
           className="sm:col-span-2"
         />
       </TableFilters>
@@ -149,7 +163,7 @@ const UsersPage = () => {
                   title="View"
                   onClick={() => setViewingUserId(user.id)}
                   className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-black/5"
-                  style={{ color: "#7e14ff" }}
+                  style={{ color: "#002b7f" }}
                 >
                   <Eye size={15} />
                 </button>
@@ -180,7 +194,7 @@ const UsersPage = () => {
 
       <UserViewSheet open={!!viewingUserId} onClose={() => setViewingUserId(null)} userId={viewingUserId} />
 
-      <AddUserModal open={addUserOpen} onClose={() => setAddUserOpen(false)} />
+      <AddUserSheet open={addUserOpen} onClose={() => setAddUserOpen(false)} />
 
       <Modal
         open={!!statusTarget}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Star, EyeOff, Eye as EyeIcon } from "lucide-react";
+import { Star } from "lucide-react";
 import { useGetReviews, useUpdateReviewVisibility } from "../../services/review.service";
 import { useSearchDebounce } from "../../hooks/useSearchDebounce";
 import { searchCourses, searchStudents } from "../../utils/comboboxSearch.util";
@@ -9,10 +9,11 @@ import { TableFilters } from "../../components/shared/TableFilters";
 import { SearchInput } from "../../components/shared/SearchInput";
 import { DropdownSelect } from "../../components/shared/Dropdown";
 import { AsyncCombobox, type ComboboxOptionData } from "../../components/shared/AsyncCombobox";
-import { StatusBadge } from "../../components/shared/StatusBadge";
+import { Toggle } from "../../components/shared/Toggle";
+import { Modal } from "../../components/shared/Modal";
 import { formatDate } from "../../utils/format.util";
 import { toastMessage } from "../../utils/toast.util";
-import type { ReviewListFilters } from "../../types/review.type";
+import type { Review, ReviewListFilters } from "../../types/review.type";
 
 const RATING_OPTIONS = [1, 2, 3, 4, 5].map((r) => ({ label: `${r} star${r > 1 ? "s" : ""}`, value: String(r) }));
 
@@ -28,7 +29,6 @@ const FIELDS: TableField[] = [
   { key: "comment", label: "Comment" },
   { key: "status", label: "Status" },
   { key: "date", label: "Date" },
-  { key: "actions", label: "" },
 ];
 
 const RatingStars = ({ rating }: { rating: number }) => (
@@ -50,6 +50,19 @@ const ReviewsPage = () => {
   const [draftCourse, setDraftCourse] = useState<ComboboxOptionData | null>(null);
   const [draftUser, setDraftUser] = useState<ComboboxOptionData | null>(null);
   const [appliedFilters, setAppliedFilters] = useState<ReviewListFilters>({});
+  const [visibilityTarget, setVisibilityTarget] = useState<Review | null>(null);
+
+  // Reset to page 1 whenever the search term settles on a new value —
+  // during render (React's documented pattern for this), not an effect,
+  // so it takes effect before the now-stale page is ever fetched. Otherwise
+  // a search while sitting on page 3+ keeps requesting page 3 of the new,
+  // smaller result set — showing "no results" even when matches exist on
+  // page 1.
+  const [prevDebouncedSearch, setPrevDebouncedSearch] = useState(debouncedSearch);
+  if (debouncedSearch !== prevDebouncedSearch) {
+    setPrevDebouncedSearch(debouncedSearch);
+    setPage(1);
+  }
 
   const filters: ReviewListFilters = {
     ...appliedFilters,
@@ -86,11 +99,16 @@ const ReviewsPage = () => {
     !!appliedFilters.courseId ||
     !!appliedFilters.userId;
 
-  const handleToggle = (reviewId: string, nextHidden: boolean) => {
+  const handleToggleVisibility = () => {
+    if (!visibilityTarget) return;
+    const nextHidden = !visibilityTarget.isHidden;
     updateVisibility(
-      { reviewId, isHidden: nextHidden },
+      { reviewId: visibilityTarget.id, isHidden: nextHidden },
       {
-        onSuccess: () => toastMessage.success({ message: nextHidden ? "Review hidden" : "Review made visible" }),
+        onSuccess: () => {
+          toastMessage.success({ message: nextHidden ? "Review hidden" : "Review made visible" });
+          setVisibilityTarget(null);
+        },
         onError: (err) => toastMessage.apiError(err),
       },
     );
@@ -110,12 +128,12 @@ const ReviewsPage = () => {
       />
 
       <TableFilters onApply={applyFilters} onReset={resetFilters} hasActiveFilters={hasActiveFilters}>
-        <DropdownSelect options={RATING_OPTIONS} value={draftRating} onChange={setDraftRating} placeholder="Any rating" />
+        <DropdownSelect options={RATING_OPTIONS} value={draftRating} onChange={setDraftRating} placeholder="All rating" />
         <DropdownSelect
           options={VISIBILITY_OPTIONS}
           value={draftVisibility}
           onChange={setDraftVisibility}
-          placeholder="Any status"
+          placeholder="All status"
         />
         <AsyncCombobox
           placeholder="Filter by course..."
@@ -160,22 +178,18 @@ const ReviewsPage = () => {
               </p>
             </td>
             <td className="px-4 py-3">
-              <StatusBadge label={review.isHidden ? "Hidden" : "Visible"} variant={review.isHidden ? "error" : "success"} />
+              <div className="flex items-center gap-2.5">
+                <Toggle checked={!review.isHidden} onClick={() => setVisibilityTarget(review)} />
+                <span
+                  className="text-[12.5px] font-medium"
+                  style={{ color: review.isHidden ? "rgba(0,0,0,0.45)" : "#16a34a" }}
+                >
+                  {review.isHidden ? "Hidden" : "Visible"}
+                </span>
+              </div>
             </td>
             <td className="px-4 py-3" style={{ color: "rgba(0,0,0,0.5)" }}>
               {formatDate(review.createdAt)}
-            </td>
-            <td className="px-4 py-3">
-              <button
-                type="button"
-                title={review.isHidden ? "Unhide" : "Hide"}
-                onClick={() => handleToggle(review.id, !review.isHidden)}
-                disabled={isToggling}
-                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-black/5 disabled:opacity-60"
-                style={{ color: review.isHidden ? "#16a34a" : "#dc2626" }}
-              >
-                {review.isHidden ? <EyeIcon size={15} /> : <EyeOff size={15} />}
-              </button>
             </td>
           </>
         )}
@@ -190,6 +204,37 @@ const ReviewsPage = () => {
         }}
         isLoading={isLoading}
       />
+
+      <Modal
+        open={!!visibilityTarget}
+        onClose={() => setVisibilityTarget(null)}
+        title={visibilityTarget?.isHidden ? "Unhide this review?" : "Hide this review?"}
+      >
+        <p className="mb-5 text-[13px]" style={{ color: "rgba(0,0,0,0.5)" }}>
+          {visibilityTarget?.isHidden
+            ? "It will become visible on the website again."
+            : "It will be hidden from the website. The student's review isn't deleted."}
+        </p>
+        <div className="flex justify-end gap-2.5">
+          <button
+            type="button"
+            onClick={() => setVisibilityTarget(null)}
+            className="rounded-xl px-4 py-2.5 text-[13px] font-semibold"
+            style={{ backgroundColor: "rgba(0,0,0,0.05)", color: "#191919" }}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleToggleVisibility}
+            disabled={isToggling}
+            className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-60"
+            style={{ backgroundColor: visibilityTarget?.isHidden ? "#16a34a" : "#dc2626" }}
+          >
+            {isToggling ? "Saving..." : visibilityTarget?.isHidden ? "Unhide" : "Hide"}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 };

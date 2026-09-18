@@ -1,9 +1,10 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Route, createBrowserRouter, createRoutesFromElements, RouterProvider } from "react-router-dom";
 import { MainLayoutShimmer } from "./components/shared/Shimmer";
 import { ProtectedRoute } from "./middleware/ProtectedRoute";
 import { ProtectedRouteAfterLogin } from "./middleware/ProtectedRouteAfterLogin";
 import { AppToaster } from "./components/shared/AppToaster";
+import { BeforeUnloadGuard } from "./components/shared/BeforeUnloadGuard";
 
 const MainLayout = lazy(() => import("./components/layout/MainLayout"));
 const LoginPage = lazy(() => import("./pages/login"));
@@ -14,31 +15,43 @@ const PaymentsPage = lazy(() => import("./pages/payments"));
 const UsersPage = lazy(() => import("./pages/users"));
 const ReviewsPage = lazy(() => import("./pages/reviews"));
 const ProfilePage = lazy(() => import("./pages/profile"));
+const CertificatePage = lazy(() => import("./pages/certificate"));
+
+// A data router (rather than plain BrowserRouter) is required for
+// useBlocker, which the course-detail page uses to confirm in-app
+// navigation away from an in-progress video upload.
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <>
+      <Route element={<ProtectedRoute />}>
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<DashboardPage />} />
+          <Route path="/courses" element={<CoursesPage />} />
+          <Route path="/courses/:courseId" element={<CourseDetailPage />} />
+          <Route path="/payments" element={<PaymentsPage />} />
+          <Route path="/users" element={<UsersPage />} />
+          <Route path="/reviews" element={<ReviewsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+        </Route>
+      </Route>
+
+      <Route element={<ProtectedRouteAfterLogin />}>
+        <Route path="/auth/signin" element={<LoginPage />} />
+      </Route>
+
+      {/* Design-review only: unauthenticated so it's quick to open and share for feedback. */}
+      <Route path="/certificate" element={<CertificatePage />} />
+    </>,
+  ),
+);
 
 function App() {
   return (
     <>
-      <BrowserRouter>
-        <Suspense fallback={<MainLayoutShimmer />}>
-          <Routes>
-            <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<MainLayout />}>
-                <Route index element={<DashboardPage />} />
-                <Route path="/courses" element={<CoursesPage />} />
-                <Route path="/courses/:courseId" element={<CourseDetailPage />} />
-                <Route path="/payments" element={<PaymentsPage />} />
-                <Route path="/users" element={<UsersPage />} />
-                <Route path="/reviews" element={<ReviewsPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-              </Route>
-            </Route>
-
-            <Route element={<ProtectedRouteAfterLogin />}>
-              <Route path="/auth/signin" element={<LoginPage />} />
-            </Route>
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+      <BeforeUnloadGuard />
+      <Suspense fallback={<MainLayoutShimmer />}>
+        <RouterProvider router={router} />
+      </Suspense>
       <AppToaster />
     </>
   );

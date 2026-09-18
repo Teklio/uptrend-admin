@@ -9,6 +9,9 @@ export interface ComboboxOptionData {
   label: string;
   sublabel?: string;
   value: string;
+  // Optional passthrough for extra data the picking screen needs (e.g. a
+  // course's price/fee) without a second fetch after selection.
+  meta?: Record<string, unknown>;
 }
 
 interface AsyncComboboxProps {
@@ -57,6 +60,7 @@ export const AsyncCombobox = ({
         onChange={onChange}
         onClose={() => setQuery("")}
         disabled={disabled}
+        immediate
         by={(a, b) => a?.value === b?.value}
       >
         <div className="relative">
@@ -71,8 +75,7 @@ export const AsyncCombobox = ({
             <ChevronDown size={16} style={{ color: "rgba(0,0,0,0.4)" }} />
           </ComboboxButton>
           <ComboboxOptions
-            anchor="bottom start"
-            className="z-20 mt-1.5 max-h-60 w-[var(--input-width)] overflow-auto rounded-xl bg-white py-1.5 text-[14px] shadow-lg focus:outline-none"
+            className="absolute z-20 mt-1.5 max-h-60 w-full overflow-auto rounded-xl bg-white py-1.5 text-[14px] shadow-lg focus:outline-none"
             style={{ border: "1px solid rgba(0,0,0,0.07)" }}
           >
             {isFetching && (
@@ -89,7 +92,7 @@ export const AsyncCombobox = ({
               <ComboboxOption
                 key={option.value}
                 value={option}
-                className="relative cursor-pointer select-none px-3.5 py-2.5 data-focus:bg-[#7e14ff]/8"
+                className="relative cursor-pointer select-none px-3.5 py-2.5 data-focus:bg-[#002b7f]/8"
               >
                 {({ selected }) => (
                   <div className="flex items-center justify-between gap-2">
@@ -103,7 +106,7 @@ export const AsyncCombobox = ({
                         </p>
                       )}
                     </div>
-                    {selected && <Check size={15} color="#7e14ff" />}
+                    {selected && <Check size={15} color="#002b7f" />}
                   </div>
                 )}
               </ComboboxOption>

@@ -26,26 +26,26 @@ export const TablePagination = ({ meta, onPageChange, onLimitChange, isLoading }
           value={String(limit)}
           onChange={(v) => v && onLimitChange(Number(v))}
           clearable={false}
-          className="w-32"
+          className="w-28"
         />
         <div className="flex items-center gap-1.5">
           <button
             type="button"
             disabled={page <= 1 || isLoading}
             onClick={() => onPageChange(page - 1)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg disabled:opacity-40"
+            className="flex h-7 w-7 items-center justify-center rounded-lg disabled:opacity-40"
             style={{ backgroundColor: "rgba(0,0,0,0.05)" }}
           >
-            <ChevronLeft size={16} />
+            <ChevronLeft size={14} />
           </button>
           <button
             type="button"
             disabled={page >= totalPages || isLoading}
             onClick={() => onPageChange(page + 1)}
-            className="flex h-8 w-8 items-center justify-center rounded-lg disabled:opacity-40"
+            className="flex h-7 w-7 items-center justify-center rounded-lg disabled:opacity-40"
             style={{ backgroundColor: "rgba(0,0,0,0.05)" }}
           >
-            <ChevronRight size={16} />
+            <ChevronRight size={14} />
           </button>
         </div>
       </div>

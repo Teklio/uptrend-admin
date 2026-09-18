@@ -10,7 +10,7 @@ import { DropdownSelect } from "../../components/shared/Dropdown";
 import { DateRangeFilter } from "../../components/shared/DateRangeFilter";
 import { StatusBadge } from "../../components/shared/StatusBadge";
 import { PaymentViewSheet } from "../../components/payments/PaymentViewSheet";
-import { OfflinePaymentModal } from "../../components/payments/OfflinePaymentModal";
+import { OfflinePaymentSheet } from "../../components/payments/OfflinePaymentSheet";
 import { formatCurrency, formatDateTime } from "../../utils/format.util";
 import type { PaymentListFilters, PaymentStatus, PaymentType } from "../../types/payment.type";
 
@@ -41,7 +41,7 @@ const FIELDS: TableField[] = [
   { key: "mode", label: "Mode" },
   { key: "status", label: "Status" },
   { key: "date", label: "Date" },
-  { key: "actions", label: "" },
+  { key: "actions", label: "Actions", className: "text-right" },
 ];
 
 const PaymentsPage = () => {
@@ -58,6 +58,18 @@ const PaymentsPage = () => {
 
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
   const [offlineModalOpen, setOfflineModalOpen] = useState(false);
+
+  // Reset to page 1 whenever the search term settles on a new value —
+  // during render (React's documented pattern for this), not an effect,
+  // so it takes effect before the now-stale page is ever fetched. Otherwise
+  // a search while sitting on page 3+ keeps requesting page 3 of the new,
+  // smaller result set — showing "no results" even when matches exist on
+  // page 1.
+  const [prevDebouncedSearch, setPrevDebouncedSearch] = useState(debouncedSearch);
+  if (debouncedSearch !== prevDebouncedSearch) {
+    setPrevDebouncedSearch(debouncedSearch);
+    setPage(1);
+  }
 
   const filters: PaymentListFilters = {
     ...appliedFilters,
@@ -98,8 +110,8 @@ const PaymentsPage = () => {
         <button
           type="button"
           onClick={() => setOfflineModalOpen(true)}
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white"
-          style={{ backgroundColor: "#7e14ff" }}
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-[#0f172a]"
+          style={{ backgroundColor: "#f5a300" }}
         >
           <Plus size={16} />
           Record offline payment
@@ -114,12 +126,12 @@ const PaymentsPage = () => {
       />
 
       <TableFilters onApply={applyFilters} onReset={resetFilters} hasActiveFilters={hasActiveFilters}>
-        <DropdownSelect options={STATUS_OPTIONS} value={draftStatus} onChange={setDraftStatus} placeholder="Any status" />
+        <DropdownSelect options={STATUS_OPTIONS} value={draftStatus} onChange={setDraftStatus} placeholder="All status" />
         <DropdownSelect
           options={PAYMENT_TYPE_OPTIONS}
           value={draftPaymentType}
           onChange={setDraftPaymentType}
-          placeholder="Any type"
+          placeholder="All type"
         />
         <DateRangeFilter
           from={draftDateFrom}
@@ -128,6 +140,8 @@ const PaymentsPage = () => {
             setDraftDateFrom(from);
             setDraftDateTo(to);
           }}
+          fromPlaceholder="Created from"
+          toPlaceholder="Created to"
           className="sm:col-span-2"
         />
       </TableFilters>
@@ -150,7 +164,7 @@ const PaymentsPage = () => {
               </p>
             </td>
             <td className="px-4 py-3">{payment.course.name}</td>
-            <td className="px-4 py-3 font-mono">{formatCurrency(payment.amount)}</td>
+            <td className="px-4 py-3 font-mono">{formatCurrency(payment.totalAmount)}</td>
             <td className="px-4 py-3">
               <StatusBadge
                 label={payment.paymentType === "OFFLINE" ? "Offline" : "Online"}
@@ -165,15 +179,17 @@ const PaymentsPage = () => {
               {formatDateTime(payment.createdAt)}
             </td>
             <td className="px-4 py-3">
-              <button
-                type="button"
-                title="View"
-                onClick={() => setSelectedPaymentId(payment.id)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-black/5"
-                style={{ color: "#7e14ff" }}
-              >
-                <Eye size={15} />
-              </button>
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  title="View"
+                  onClick={() => setSelectedPaymentId(payment.id)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-black/5"
+                  style={{ color: "#002b7f" }}
+                >
+                  <Eye size={15} />
+                </button>
+              </div>
             </td>
           </>
         )}
@@ -195,7 +211,7 @@ const PaymentsPage = () => {
         paymentId={selectedPaymentId}
       />
 
-      <OfflinePaymentModal open={offlineModalOpen} onClose={() => setOfflineModalOpen(false)} />
+      <OfflinePaymentSheet open={offlineModalOpen} onClose={() => setOfflineModalOpen(false)} />
     </div>
   );
 };

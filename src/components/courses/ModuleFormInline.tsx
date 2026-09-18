@@ -5,6 +5,8 @@ import { moduleFormSchema, type ModuleFormSchemaType } from "../../schemas/cours
 import { useAddModule, useUpdateModule } from "../../services/module.service";
 import { Modal } from "../shared/Modal";
 import { Input } from "../shared/Input";
+import { DiscardChangesModal } from "../shared/DiscardChangesModal";
+import { useDiscardGuard } from "../../hooks/useDiscardGuard";
 import { toastMessage } from "../../utils/toast.util";
 import type { CourseModule } from "../../types/course.type";
 
@@ -31,6 +33,11 @@ export const ModuleFormInline = ({ open, onClose, courseId, module }: ModuleForm
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, module]);
 
+  const { confirmOpen, requestClose, confirmDiscard, cancelDiscard } = useDiscardGuard(
+    form.formState.isDirty,
+    onClose,
+  );
+
   const isPending = isAdding || isUpdating;
 
   const onSubmit = (values: ModuleFormSchemaType) => {
@@ -48,31 +55,34 @@ export const ModuleFormInline = ({ open, onClose, courseId, module }: ModuleForm
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={isEdit ? "Rename module" : "Add module"}>
-      <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          <Input name="title" label="Title" placeholder="e.g. Getting Started" />
-          <Input name="description" type="textarea" label="Description" rows={3} />
-          <div className="mt-1 flex justify-end gap-2.5">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-xl px-4 py-2.5 text-[13px] font-semibold"
-              style={{ backgroundColor: "rgba(0,0,0,0.05)", color: "#191919" }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-60"
-              style={{ backgroundColor: "#7e14ff" }}
-            >
-              {isPending ? "Saving..." : isEdit ? "Save changes" : "Add module"}
-            </button>
-          </div>
-        </form>
-      </FormProvider>
-    </Modal>
+    <>
+      <Modal open={open} onClose={requestClose} title={isEdit ? "Rename module" : "Add module"}>
+        <FormProvider {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+            <Input name="title" label="Title" placeholder="e.g. Getting Started" />
+            <Input name="description" type="textarea" label="Description" rows={3} />
+            <div className="mt-1 flex justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={requestClose}
+                className="rounded-xl px-4 py-2.5 text-[13px] font-semibold"
+                style={{ backgroundColor: "rgba(0,0,0,0.05)", color: "#191919" }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isPending}
+                className="rounded-xl px-4 py-2.5 text-[13px] font-semibold text-[#0f172a] disabled:opacity-60"
+                style={{ backgroundColor: "#f5a300" }}
+              >
+                {isPending ? "Saving..." : isEdit ? "Save changes" : "Add module"}
+              </button>
+            </div>
+          </form>
+        </FormProvider>
+      </Modal>
+      <DiscardChangesModal open={confirmOpen} onCancel={cancelDiscard} onConfirm={confirmDiscard} />
+    </>
   );
 };

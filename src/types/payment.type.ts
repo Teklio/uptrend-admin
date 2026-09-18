@@ -6,6 +6,8 @@ interface PaymentBase {
   rzpOrderId: string | null;
   reference: string | null;
   amount: string;
+  extraFee: string;
+  totalAmount: string;
   taxPrice: string;
   transactionId: string | null;
   paymentDetails: unknown;
@@ -27,8 +29,18 @@ export interface Payment extends PaymentBase {
   hasProof: boolean;
 }
 
+export interface PaymentExpiryLog {
+  id: string;
+  days: number;
+  previousExpiresAt: string | null;
+  newExpiresAt: string;
+  createdAt: string;
+  admin: { id: string; name: string | null; email: string };
+}
+
 export interface PaymentDetail extends PaymentBase {
   proofUrl: string | null;
+  expiryLogs: PaymentExpiryLog[];
 }
 
 export interface PaymentListFilters {

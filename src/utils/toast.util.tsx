@@ -6,7 +6,7 @@ import type { ApiErrorResponse } from "../config/axios";
 const cardStyle = (borderColor: string) => ({
   style: {
     borderLeft: `3px solid ${borderColor}`,
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "'Poppins', sans-serif",
     fontSize: "14px",
     borderRadius: "14px",
   },
@@ -30,8 +30,8 @@ export const toastMessage = {
     }),
   info: ({ message }: { message: string }) =>
     toast.info(message, {
-      icon: <Info size={18} color="#7e14ff" />,
-      ...cardStyle("#7e14ff"),
+      icon: <Info size={18} color="#002b7f" />,
+      ...cardStyle("#002b7f"),
     }),
   apiError: (error: unknown) => {
     const axiosError = error as AxiosError<ApiErrorResponse>;

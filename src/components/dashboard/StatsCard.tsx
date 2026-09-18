@@ -15,7 +15,7 @@ export const StatsCard = ({ label, value, icon, hint }: StatsCardProps) => (
       </span>
       <div
         className="flex h-9 w-9 items-center justify-center rounded-full"
-        style={{ backgroundColor: "rgba(126,20,255,0.1)" }}
+        style={{ backgroundColor: "rgba(0,43,127,0.1)" }}
       >
         {icon}
       </div>

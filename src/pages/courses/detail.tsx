@@ -8,7 +8,6 @@ import { SortableList } from "../../components/shared/SortableList";
 import { ModuleAccordionItem } from "../../components/courses/ModuleAccordionItem";
 import { ModuleFormInline } from "../../components/courses/ModuleFormInline";
 import { VideoFormInline } from "../../components/courses/VideoFormInline";
-import { VideoUploadDialog } from "../../components/courses/VideoUploadDialog";
 import { VideoPreviewModal } from "../../components/courses/VideoPreviewModal";
 import { CourseSheet } from "../../components/courses/CourseSheet";
 import { DeleteConfirmModal } from "../../components/shared/DeleteConfirmModal";
@@ -19,7 +18,6 @@ import { formatCurrency } from "../../utils/format.util";
 import type { CourseModule, CourseVideo } from "../../types/course.type";
 
 type ModuleFormState = { open: false } | { open: true; module: CourseModule | null };
-type VideoUploadState = { open: false } | { open: true; moduleId: string };
 type PreviewState = { open: false } | { open: true; title: string; embedUrl: string };
 
 const CourseDetailPage = () => {
@@ -30,7 +28,6 @@ const CourseDetailPage = () => {
   const [courseSheetOpen, setCourseSheetOpen] = useState(false);
   const [moduleFormState, setModuleFormState] = useState<ModuleFormState>({ open: false });
   const [moduleToDelete, setModuleToDelete] = useState<CourseModule | null>(null);
-  const [videoUploadState, setVideoUploadState] = useState<VideoUploadState>({ open: false });
   const [videoToEdit, setVideoToEdit] = useState<CourseVideo | null>(null);
   const [videoToDelete, setVideoToDelete] = useState<CourseVideo | null>(null);
   const [previewState, setPreviewState] = useState<PreviewState>({ open: false });
@@ -46,6 +43,13 @@ const CourseDetailPage = () => {
   if (isLoading || !course) {
     return <MainLayoutShimmer />;
   }
+
+  // Unlike deleting the whole course, deleting a single module/video isn't
+  // blocked when the course has paying students — enforcing that would make
+  // ordinary content maintenance impossible on any course that's ever sold
+  // a copy. The caution has to be surfaced here instead.
+  const hasEnrollments = course.enrollmentCount > 0;
+  const enrollmentWarning = `${course.enrollmentCount} student${course.enrollmentCount === 1 ? " has" : "s have"} paid for this course and will lose access to this content immediately. `;
 
   const handleReorderModules = (newOrder: CourseModule[]) => {
     reorderModules.mutate(newOrder.map((m, index) => ({ id: m.id, displayOrder: index })));
@@ -155,8 +159,8 @@ const CourseDetailPage = () => {
         <button
           type="button"
           onClick={() => setModuleFormState({ open: true, module: null })}
-          className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-[13px] font-semibold text-white"
-          style={{ backgroundColor: "#7e14ff" }}
+          className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-[13px] font-semibold text-[#0f172a]"
+          style={{ backgroundColor: "#f5a300" }}
         >
           <Plus size={15} />
           Add module
@@ -174,13 +178,14 @@ const CourseDetailPage = () => {
         <SortableList
           items={course.modules}
           onReorder={handleReorderModules}
-          renderItem={(module, dragHandle) => (
+          renderItem={(module, dragHandle, index) => (
             <ModuleAccordionItem
               module={module}
+              index={index}
+              courseId={courseId ?? ""}
               dragHandle={dragHandle}
               onRename={() => setModuleFormState({ open: true, module })}
               onDeleteModule={() => setModuleToDelete(module)}
-              onAddVideo={() => setVideoUploadState({ open: true, moduleId: module.id })}
               onReorderVideos={(newOrder) => handleReorderVideos(module.id, newOrder)}
               onPlayVideo={handlePlayVideo}
               onSyncVideo={handleSyncVideo}
@@ -200,15 +205,6 @@ const CourseDetailPage = () => {
         courseId={courseId ?? ""}
         module={moduleFormState.open ? moduleFormState.module : null}
       />
-
-      {videoUploadState.open && (
-        <VideoUploadDialog
-          open={videoUploadState.open}
-          onClose={() => setVideoUploadState({ open: false })}
-          courseId={courseId ?? ""}
-          moduleId={videoUploadState.moduleId}
-        />
-      )}
 
       <VideoFormInline
         open={!!videoToEdit}
@@ -230,7 +226,10 @@ const CourseDetailPage = () => {
         onConfirm={handleDeleteModule}
         isDeleting={deleteModule.isPending}
         title="Delete this module?"
-        description="Its videos will be removed from Bunny too. This cannot be undone."
+        description={
+          (hasEnrollments ? enrollmentWarning : "") +
+          "Its videos will be removed from Bunny too. This cannot be undone."
+        }
       />
 
       <DeleteConfirmModal
@@ -239,7 +238,9 @@ const CourseDetailPage = () => {
         onConfirm={handleDeleteVideo}
         isDeleting={deleteVideo.isPending}
         title="Delete this video?"
-        description="It will be removed from Bunny too. This cannot be undone."
+        description={
+          (hasEnrollments ? enrollmentWarning : "") + "It will be removed from Bunny too. This cannot be undone."
+        }
       />
     </div>
   );

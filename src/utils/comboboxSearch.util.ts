@@ -18,5 +18,10 @@ export const searchCourses = async (query: string): Promise<ComboboxOptionData[]
   const { data } = await axiosInstance.get<ApiSuccess<PaginatedData<Course>>>("/admin/courses", {
     params: { search: query || undefined, limit: 10 },
   });
-  return data.data.items.map((c) => ({ value: c.id, label: c.name, sublabel: c.language ?? undefined }));
+  return data.data.items.map((c) => ({
+    value: c.id,
+    label: c.name,
+    sublabel: c.language ?? undefined,
+    meta: { price: c.price, extraFee: c.extraFee },
+  }));
 };

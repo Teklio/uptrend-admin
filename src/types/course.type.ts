@@ -5,9 +5,9 @@ export interface Course {
   language: string | null;
   mentorName: string | null;
   features: string[];
-  highlights: string[];
   price: string;
   actualPrice: string;
+  extraFee: string;
   isPublished: boolean;
   primaryImageUrl: string | null;
   mentorImageUrl: string | null;
@@ -44,6 +44,9 @@ export interface CourseModule {
 
 export interface CourseDetail extends Course {
   modules: CourseModule[];
+  // Count of SUCCESS payments — used to warn before deleting a module/video,
+  // since (unlike deleting the whole course) that isn't blocked server-side.
+  enrollmentCount: number;
 }
 
 export interface CourseListFilters {

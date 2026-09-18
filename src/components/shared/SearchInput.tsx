@@ -14,7 +14,7 @@ export const SearchInput = ({ value, onChange, placeholder = "Search...", classN
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-xl pl-10 pr-9 py-2.5 text-[14px] outline-none focus:ring-2 focus:ring-[#7e14ff]/15"
+      className="w-full rounded-xl pl-10 pr-9 py-2.5 text-[14px] outline-none focus:ring-2 focus:ring-[#002b7f]/15"
       style={{ backgroundColor: "#f0f0f0", border: "1px solid rgba(0,0,0,0.07)" }}
     />
     {value && (

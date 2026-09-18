@@ -8,7 +8,7 @@ export const emailSchema = z.email("Invalid email address");
 export const passwordSchema = z
   .string()
   .min(6, "Must be at least 6 characters")
-  .max(12, "Must be at most 12 characters")
+  .max(16, "Must be at most 16 characters")
   .regex(/[A-Za-z]/, "Must include a letter")
   .regex(/\d/, "Must include a number")
   .regex(/[^A-Za-z0-9]/, "Must include a special character");
