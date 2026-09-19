@@ -1,9 +1,14 @@
 export const formatCurrency = (amount: number | string) => {
   const value = typeof amount === "string" ? Number(amount) : amount;
+  // Whole-rupee amounts (the overwhelming majority) stay clean ("₹999"),
+  // but any fractional paise are shown in full instead of being silently
+  // rounded away — a 0.8/0.5 price+fee must not both display as "₹1".
+  const hasFraction = !Number.isInteger(value);
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: hasFraction ? 2 : 0,
+    maximumFractionDigits: hasFraction ? 2 : 0,
   }).format(value);
 };
 
