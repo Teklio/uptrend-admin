@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   BookOpen,
+  Newspaper,
   CreditCard,
   Users,
   Star,
@@ -18,6 +19,7 @@ import { Modal } from "../shared/Modal";
 const NAV_ITEMS = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/courses", label: "Courses", icon: BookOpen, end: false },
+  { to: "/blogs", label: "Blogs", icon: Newspaper, end: false },
   { to: "/payments", label: "Payments", icon: CreditCard, end: false },
   { to: "/users", label: "Users", icon: Users, end: false },
   { to: "/reviews", label: "Reviews", icon: Star, end: false },

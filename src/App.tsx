@@ -11,6 +11,8 @@ const LoginPage = lazy(() => import("./pages/login"));
 const DashboardPage = lazy(() => import("./pages/dashboard"));
 const CoursesPage = lazy(() => import("./pages/courses"));
 const CourseDetailPage = lazy(() => import("./pages/courses/detail"));
+const BlogsPage = lazy(() => import("./pages/blogs"));
+const BlogEditorPage = lazy(() => import("./pages/blogs/editor"));
 const PaymentsPage = lazy(() => import("./pages/payments"));
 const UsersPage = lazy(() => import("./pages/users"));
 const ReviewsPage = lazy(() => import("./pages/reviews"));
@@ -28,6 +30,9 @@ const router = createBrowserRouter(
           <Route index element={<DashboardPage />} />
           <Route path="/courses" element={<CoursesPage />} />
           <Route path="/courses/:courseId" element={<CourseDetailPage />} />
+          <Route path="/blogs" element={<BlogsPage />} />
+          <Route path="/blogs/new" element={<BlogEditorPage />} />
+          <Route path="/blogs/:blogId" element={<BlogEditorPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
           <Route path="/users" element={<UsersPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
